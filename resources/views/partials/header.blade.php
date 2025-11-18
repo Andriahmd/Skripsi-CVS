@@ -17,10 +17,23 @@
 
             <!-- ACTION BUTTON -->
             <div class="flex items-center space-x-4">
-                <a href="{{ route('login') }}"
-                    class="bg-teal-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-teal-700 transition">
-                    Login
-                </a>
+                @auth
+                    <!-- Jika user sudah login -->
+                    <span class="text-gray-700 font-medium">Halo, {{ Auth::user()->name }}</span>
+                    <form method="POST" action="{{ route('logout') }}" class="inline">
+                        @csrf
+                        <button type="submit"
+                            class="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition">
+                            Logout
+                        </button>
+                    </form>
+                @else
+                    <!-- Jika user belum login -->
+                    <a href="{{ route('login') }}"
+                        class="bg-teal-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-teal-700 transition">
+                        Login
+                    </a>
+                @endauth
             </div>
 
         </div>

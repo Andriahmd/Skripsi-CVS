@@ -19,7 +19,7 @@
     <nav class="flex-1 overflow-y-auto pr-2 scrollbar-thin" id="navigation">
         @php
             $categories = [
-                1 => 'Pengecekan Kondisi Enklusi dan Eklusi Pasien',
+                1 => 'Kondisi Enklusi dan Eklusi',
                 2 => 'Mata Lelah',
                 3 => 'Mata Kering',
                 4 => 'Mata Kabur',

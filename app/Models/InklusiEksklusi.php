@@ -1,4 +1,5 @@
 <?php
+// app/Models/InklusiEksklusi.php
 
 namespace App\Models;
 
@@ -6,42 +7,46 @@ use Illuminate\Database\Eloquent\Model;
 
 class InklusiEksklusi extends Model
 {
-    protected $table = 'inklusi_eksklusi'; // Eksplisit tabel
-    protected $primaryKey = 'id_inklusi_eksklusi'; // Sesuaikan dengan migration
+    protected $table = 'inklusi_eksklusi';
+    protected $primaryKey = 'id_inklusi_eksklusi';
     public $incrementing = true;
     protected $keyType = 'int';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
-        'id_periksa',
+        'id_pemeriksaan',
         'memenuhi_inklusi',
-        'memenuhi',
         'ada_eksklusi',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'memenuhi_inklusi' => 'string',
-            'memenuhi' => 'string',
-            'ada_eksklusi' => 'string',
-        ];
-    }
+    protected $casts = [
+        'memenuhi_inklusi' => 'boolean',
+        'ada_eksklusi' => 'boolean',
+    ];
 
-    /**
-     * Relasi ke Pemeriksaan
-     */
+    // Relasi
     public function pemeriksaan()
     {
-        return $this->belongsTo(Pemeriksaan::class, 'id_periksa', 'id_periksa');
+        return $this->belongsTo(Pemeriksaan::class, 'id_pemeriksaan', 'id');
+    }
+
+    // Helper method
+    public function lolosScreening(): bool
+    {
+        return $this->memenuhi_inklusi && !$this->ada_eksklusi;
+    }
+
+    // Scopes
+    public function scopeLolos($query)
+    {
+        return $query->where('memenuhi_inklusi', true)
+                     ->where('ada_eksklusi', false);
+    }
+
+    public function scopeTidakLolos($query)
+    {
+        return $query->where(function($q) {
+            $q->where('memenuhi_inklusi', false)
+              ->orWhere('ada_eksklusi', true);
+        });
     }
 }

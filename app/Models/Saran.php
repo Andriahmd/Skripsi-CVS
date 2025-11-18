@@ -1,4 +1,5 @@
 <?php
+// app/Models/Saran.php
 
 namespace App\Models;
 
@@ -6,26 +7,19 @@ use Illuminate\Database\Eloquent\Model;
 
 class Saran extends Model
 {
-    protected $table = 'saran'; // Eksplisit tabel
-    protected $primaryKey = 'id_saran'; // Sesuaikan dengan migration
+    protected $table = 'saran';
+    protected $primaryKey = 'id_saran';
     public $incrementing = true;
     protected $keyType = 'int';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
-        'id_periksa',
+        'id_pemeriksaan',
         'isi_saran',
     ];
 
-    /**
-     * Relasi ke Pemeriksaan
-     */
+    // Relasi
     public function pemeriksaan()
     {
-        return $this->belongsTo(Pemeriksaan::class, 'id_periksa', 'id_periksa');
+        return $this->belongsTo(Pemeriksaan::class, 'id_pemeriksaan', 'id');
     }
 }

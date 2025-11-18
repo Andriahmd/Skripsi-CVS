@@ -1,49 +1,58 @@
 @extends('layouts.app')
 
 @section('content')
-<section class="about-section bg-gray-100 py-12">
+{{-- UBAH DISINI: Ganti bg-gray-100 menjadi style background-color: #D7E7E5 --}}
+<section class="about-section py-12" style="background-color: #D7E7E5;">
     <div class="container mx-auto px-4">
         <div class="row flex flex-wrap items-center">
-            <div class="col-md- w-full md:w-1/2">
-                {{-- <img src="https://i.pinimg.com/1200x/a2/20/cb/a220cb6423e96fe1754b09815880f421.jpg" alt="People Working" class="img-rounded rounded-lg mb-4"> --}}
-           <img src="https://i.pinimg.com/1200x/a2/20/cb/a220cb6423e96fe1754b09815880f421.jpg" 
-       alt="Computer Vision Syndrome" 
-       style="width: 580px; height: auto; border-radius: 8px; object-fit: cover;">
+            
+            {{-- Kolom Gambar --}}
+            <div class="col-md-6 w-full md:w-1/2 mb-8 md:mb-0">
+                <img src="https://i.pinimg.com/1200x/a2/20/cb/a220cb6423e96fe1754b09815880f421.jpg" 
+                     alt="Computer Vision Syndrome" 
+                     class="shadow-lg"
+                     style="width: 580px; max-width: 100%; height: auto; border-radius: 12px; object-fit: cover;">
             </div>
             
-            <div class="col-md-6 w-full md:w-1/2">
-                <h1 class="title text-4xl font-bold text-gray-900 mb-4">Understanding Computer Vision Syndrome</h1>
-                <p class="description text-gray-600 mb-6">
+            {{-- Kolom Teks --}}
+            <div class="col-md-6 w-full md:w-1/2 md:pl-10">
+                <h1 class="title text-4xl font-bold text-teal-900 mb-4">Understanding Computer Vision Syndrome</h1>
+                <p class="description text-gray-700 mb-8 text-lg leading-relaxed">
                     Computer Vision Syndrome (CVS) arises from prolonged screen exposure, causing eyestrain, headaches, blurred vision, and discomfort. Factors like poor ergonomics and uncorrected vision worsen its impact, affecting people of all ages.
                 </p>
                 
-                <div class="value-item flex items-center mb-6">
-                    <div class="icon flex items-center justify-center w-10 h-10 bg-teal-500 text-white rounded-full mr-4">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
+                {{-- Item 1 --}}
+                <div class="value-item flex items-start mb-8 bg-white/50 p-4 rounded-xl border border-teal-100 hover:shadow-md transition-all">
+                    {{-- <div class="icon flex flex-shrink-0 items-center justify-center w-12 h-12 bg-teal-600 text-white rounded-full mr-5 shadow-md">
+                        <i class="fas fa-exclamation-triangle text-lg"></i>
+                    </div> --}}
                     <div>
-                        <h3 class="value-title text-xl font-bold">Dangers for Teenagers</h3>
-                        <p class="value-desc text-gray-600">
+                        <h3 class="value-title text-xl font-bold text-teal-800 mb-2">Dangers for Teenagers</h3>
+                        <p class="value-desc text-gray-700 mb-2">
                             Teens face risks like myopia, sleep disruption, and reduced focus from excessive screen use, especially with gaming and online studies.
                         </p>
-                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Iste laboriosam vitae quae quibusdam voluptatibus eveniet exercitationem officia facilis quaerat. Explicabo ad quo qui voluptatum, nihil, hic totam fuga blanditiis consequatur soluta provident alias quae asperiores atque perferendis ipsa at? Ab, odio neque illum iste recusandae velit, architecto, tempore eum aperiam similique eveniet facilis quo. Maiores expedita in quam ipsum nesciunt eius voluptas deleniti quisquam non aut praesentium quis ea, tenetur explicabo fugit odio delectus. Suscipit vero itaque sint quod dolores dolorem dolor ad. Ipsa laudantium voluptatum voluptates qui amet veritatis nulla, perspiciatis eius laborum, laboriosam dignissimos pariatur praesentium rem reiciendis!</p>
+                        <p class="text-sm text-gray-600 italic">
+                            "Early prevention in teenagers significantly reduces the risk of long-term vision damage."
+                        </p>
                     </div>
                 </div>
                 
-                <div class="value-item flex items-center mb-6">
-                    <div class="icon flex items-center justify-center w-10 h-10 bg-teal-500 text-white rounded-full mr-4">
-                        <i class="fas fa-user-injured"></i>
-                    </div>
+                {{-- Item 2 --}}
+                <div class="value-item flex items-start bg-white/50 p-4 rounded-xl border border-teal-100 hover:shadow-md transition-all">
+                    {{-- <div class="icon flex flex-shrink-0 items-center justify-center w-12 h-12 bg-teal-600 text-white rounded-full mr-5 shadow-md">
+                        <i class="fas fa-user-injured text-lg"></i>
+                    </div> --}}
                     <div>
-                        <h3 class="value-title text-xl font-bold">Impacts on the Elderly</h3>
-                        <p class="value-desc text-gray-600">
+                        <h3 class="value-title text-xl font-bold text-teal-800 mb-2">Impacts on the Elderly</h3>
+                        <p class="value-desc text-gray-700 mb-2">
                             Older adults experience intensified symptoms due to age-related eye issues, such as dry eyes and fatigue, potentially worsening conditions like cataracts.
                         </p>
-                        <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Architecto, tenetur esse quasi explicabo dolor, sunt ducimus labore beatae nisi pariatur repudiandae illo animi officiis aspernatur nam vero sit nobis. Iusto laudantium dolor eveniet. Et incidunt nobis magnam, explicabo commodi eos eligendi excepturi nostrum, blanditiis facilis ut ullam maiores in deleniti.</p>
+                        <p class="text-sm text-gray-600 italic">
+                            "Proper ergonomics and lighting are crucial for elderly users to maintain eye comfort."
+                        </p>
                     </div>
                 </div>
 
-                
             </div>
         </div>
     </div>

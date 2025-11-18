@@ -2,35 +2,52 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PemeriksaanController;
 
+//Public Routes (Guest Only)
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+    Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
+    Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+});
 
-Route::get('/', function () {
-    return view('index'); // halaman utama
-})->name('home');
+//Public Pages (Anyone)
+Route::view('/', 'index')->name('home');
+Route::view('/about', 'about')->name('about');
+Route::view('/saran', 'saran')->name('pages');
 
-Route::get('/about', function () {
-    return view('about'); // file: resources/views/about.blade.php
-})->name('about');
+//Authenticated Routes Only (Harus Login)
+Route::middleware('auth')->group(function () {
+    // Logout
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-Route::get('/pertanyaan', function () {
-    return view('pertanyaan'); // file: resources/views/pertanyaan.blade.php
-})->name('pertanyaan');
+    // Halaman Kuis / Pemeriksaan
+    Route::get('/pertanyaan', [PemeriksaanController::class, 'showForm'])->name('pertanyaan');
 
-Route::get('/pages', function () {
-    return view('pages'); // nanti bikin resources/views/pages.blade.php
-})->name('pages');
+    // Endpoint JSON untuk Kuis (JS Fetch)
+    Route::get('/pertanyaan-api', [PemeriksaanController::class, 'getPertanyaan'])->name('pertanyaan.api');
 
-Route::get('/contact', function () {
-    return view('contact'); // nanti bikin resources/views/contact.blade.php
-})->name('contact');
+    // Group API (Untuk proses simpan & hitung via AJAX)
+    Route::prefix('api')->group(function () {
+        Route::post('/pemeriksaan', [PemeriksaanController::class, 'createPemeriksaan'])->name('api.pemeriksaan.create');
+        Route::get('/pertanyaan', [PemeriksaanController::class, 'getPertanyaan'])->name('api.pertanyaan.get');
+        Route::post('/screening', [PemeriksaanController::class, 'simpanScreening'])->name('api.screening.save');
+        Route::post('/jawaban', [PemeriksaanController::class, 'simpanJawaban'])->name('api.jawaban.save');
+        
+        // Route Penting untuk Hitung Diagnosis
+        Route::post('/diagnosis', [PemeriksaanController::class, 'hitungDiagnosis'])->name('api.diagnosis.calculate');
+        
+        Route::get('/riwayat', [PemeriksaanController::class, 'getRiwayat'])->name('api.riwayat.get');
+    });
 
-Route::get('/login', function () {
-    return view('login');
-})->name('login');
+    // ✅ ROUTE HASIL (Ini yang akan dipanggil setelah selesai hitung)
+    // Pastikan route ini ada di dalam middleware 'auth'
+    Route::get('/hasil/{idPemeriksaan}', [PemeriksaanController::class, 'hasilDiagnosis'])
+        ->name('hasil.show'); 
+});
 
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login.post'); 
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
-Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
-Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+//Fallback (404)
+Route::fallback(function () {
+    return redirect()->route('home');
+});

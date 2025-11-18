@@ -1,4 +1,5 @@
 <?php
+// app/Models/Jawaban.php
 
 namespace App\Models;
 
@@ -6,47 +7,64 @@ use Illuminate\Database\Eloquent\Model;
 
 class Jawaban extends Model
 {
-    protected $table = 'jawaban'; // Eksplisit tabel
-    protected $primaryKey = 'id_jawaban'; // Sesuaikan dengan migration
+    protected $table = 'jawaban';
+    protected $primaryKey = 'id_jawaban';
     public $incrementing = true;
     protected $keyType = 'int';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
-        'id_periksa',
+        'id_pemeriksaan',
         'id_gejala',
-        'nilai_jawaban',
+        'jawaban_text',
+        'nilai_cf',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'nilai_jawaban' => 'float',
-        ];
-    }
+    protected $casts = [
+        'nilai_cf' => 'float',
+    ];
 
-    /**
-     * Relasi ke Pemeriksaan
-     */
+    // Relasi
     public function pemeriksaan()
     {
-        return $this->belongsTo(Pemeriksaan::class, 'id_periksa', 'id_periksa');
+        return $this->belongsTo(Pemeriksaan::class, 'id_pemeriksaan', 'id');
     }
 
-    /**
-     * Relasi ke Gejala
-     */
     public function gejala()
     {
-        return $this->belongsTo(Gejala::class, 'id_gejala', 'id_gejala');
+        return $this->belongsTo(Gejala::class, 'id_gejala', 'id');
+    }
+
+    // Helper methods
+    public static function getBobotFromText(string $text): float
+    {
+        $bobot = [
+            'Tidak Pernah' => 0.0,
+            'Kadang-kadang' => 0.4,
+            'Cukup Sering' => 0.6,
+            'Selalu' => 0.8,
+        ];
+        return $bobot[$text] ?? 0.0;
+    }
+
+    public static function getTextFromBobot(float $nilai): string
+    {
+        $map = [
+            0.0 => 'Tidak Pernah',
+            0.4 => 'Kadang-kadang',
+            0.6 => 'Cukup Sering',
+            0.8 => 'Selalu',
+        ];
+        return $map[$nilai] ?? 'Tidak Diketahui';
+    }
+
+    // Scopes
+    public function scopeGejalaOnly($query)
+    {
+        return $query->whereNotNull('id_gejala');
+    }
+
+    public function scopeByPemeriksaan($query, $idPemeriksaan)
+    {
+        return $query->where('id_pemeriksaan', $idPemeriksaan);
     }
 }
