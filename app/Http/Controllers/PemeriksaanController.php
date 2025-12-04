@@ -345,7 +345,7 @@ class PemeriksaanController extends Controller
     }
 
     /**
-     * 🧮 Hitung diagnosis final
+     * Hitung diagnosis final
      */
     public function hitungDiagnosis(Request $request)
     {
@@ -369,7 +369,7 @@ class PemeriksaanController extends Controller
                 ->pluck('nilai_cf')
                 ->toArray();
 
-            // Hitung CF Combine (Algoritma Tidak Diubah)
+            // Hitung CF Combine 
             if (empty($jawabanGejala)) {
                 $persentase = 0.0;
             } else {
@@ -401,7 +401,7 @@ class PemeriksaanController extends Controller
                 'id_pemeriksaan' => $idPemeriksaan,
                 'persentase' => $persentase,
                 'diagnosis' => $diagnosis,
-                'redirect_url' => route('hasil.show', $idPemeriksaan) // INI KUNCINYA
+                'redirect_url' => route('hasil.show', $idPemeriksaan) 
             ]);
 
         } catch (\Exception $e) {

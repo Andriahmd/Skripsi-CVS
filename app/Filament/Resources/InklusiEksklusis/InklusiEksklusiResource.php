@@ -15,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class InklusiEksklusiResource extends Resource
 {
@@ -46,6 +47,12 @@ class InklusiEksklusiResource extends Resource
             //
         ];
     }
+
+    // public static function getRecordTitle(Model $record): string
+    // {
+      
+    //     return $record->pemeriksaan->user->name ?? 'Screening #' . $record->id_inklusi_eksklusi;
+    // }
 
     public static function getPages(): array
     {

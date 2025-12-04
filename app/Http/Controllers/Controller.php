@@ -6,7 +6,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
-use Illuminate\Support\Facades\Log; // ✅ Tambahkan baris ini
+use Illuminate\Support\Facades\Log;
 
 class Controller extends BaseController
 {
@@ -14,6 +14,6 @@ class Controller extends BaseController
 
     protected function logError($message, $context = [])
     {
-        Log::error($message, $context); // sudah benar
+        Log::error($message, $context); 
     }
 }
