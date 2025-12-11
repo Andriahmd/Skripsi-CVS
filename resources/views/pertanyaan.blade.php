@@ -7,12 +7,12 @@
 {{-- Background Gradient Modern --}}
 <div class="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-50 to-teal-50 p-4 md:p-8 overflow-hidden font-sans relative">
     
-    {{-- Decorative Blobs (Background Hiasan) --}}
+    {{-- Decorative Blobs --}}
     <div class="absolute top-0 left-0 w-96 h-96 bg-teal-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
     <div class="absolute top-0 right-0 w-96 h-96 bg-cyan-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
     <div class="absolute -bottom-32 left-20 w-96 h-96 bg-emerald-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
 
-    {{-- MAIN CONTAINER (SPLIT LAYOUT) --}}
+    {{-- MAIN CONTAINER --}}
     <div class="w-full max-w-6xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row h-[85vh] md:h-[80vh] relative z-10 border border-white/50">
         
         {{-- Loading Overlay Global --}}
@@ -24,25 +24,20 @@
             <p class="mt-4 text-gray-500 font-medium tracking-wide animate-pulse">Menyiapkan Sistem Pakar...</p>
         </div>
 
-        {{-- LEFT PANEL (Sidebar Info) --}}
+        {{-- LEFT PANEL --}}
         <div class="md:w-1/3 bg-teal-900 relative overflow-hidden flex flex-col justify-between p-8 text-white">
-            {{-- Pattern Overlay --}}
             <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 24px 24px;"></div>
             
-            {{-- Top: Brand & Category --}}
             <div class="relative z-10">
                 <div class="flex items-center space-x-2 mb-8 opacity-80">
                     <div class="w-2 h-2 bg-teal-400 rounded-full"></div>
                     <span class="text-xs font-bold tracking-widest uppercase">Sistem Diagnosis CVS</span>
                 </div>
                 
-                <h1 id="category-title" class="text-3xl md:text-4xl font-bold leading-tight mb-2">
-                    Memuat...
-                </h1>
+                <h1 id="category-title" class="text-3xl md:text-4xl font-bold leading-tight mb-2">Memuat...</h1>
                 <p class="text-teal-200 text-sm md:text-base opacity-80">Jawablah dengan jujur sesuai kondisi mata Anda.</p>
             </div>
 
-            {{-- Bottom: Progress Indicator --}}
             <div class="relative z-10 mt-auto">
                 <div class="flex justify-between text-xs font-medium mb-2 text-teal-200">
                     <span>Progress</span>
@@ -64,31 +59,22 @@
             </div>
         </div>
 
-        {{-- RIGHT PANEL (Question Area) --}}
+        {{-- RIGHT PANEL --}}
         <div class="md:w-2/3 bg-white relative flex flex-col">
             
-            {{-- Header Mobile Only (Hidden on Desktop) --}}
             <div class="md:hidden px-6 py-4 border-b flex justify-between items-center bg-gray-50">
                 <span class="text-sm font-bold text-gray-600">Pertanyaan</span>
                 <span id="mobile-counter" class="text-sm font-bold text-teal-600">1 / -</span>
             </div>
 
-            {{-- Scrollable Content Area --}}
             <div class="flex-1 overflow-y-auto p-6 md:p-12 custom-scrollbar flex items-center">
                 <div class="w-full max-w-2xl mx-auto">
                     
-                    {{-- Question Container --}}
                     <div id="question-container" class="transition-all duration-500">
-                        {{-- Text Soal --}}
-                        <h2 id="q-text" class="text-xl md:text-2xl font-semibold text-gray-800 leading-relaxed mb-8 animate-fade-in-up">
-                            </h2>
-
-                        {{-- Options Grid --}}
-                        <div id="options-container" class="space-y-3">
-                            </div>
+                        <h2 id="q-text" class="text-xl md:text-2xl font-semibold text-gray-800 leading-relaxed mb-8 animate-fade-in-up"></h2>
+                        <div id="options-container" class="space-y-3"></div>
                     </div>
 
-                    {{-- Loading Spinner (Per Question) --}}
                     <div id="question-loading" class="hidden flex-col items-center justify-center py-12">
                         <div class="w-10 h-10 border-4 border-gray-200 border-t-teal-500 rounded-full animate-spin mb-4"></div>
                         <span class="text-gray-400 text-sm">Memuat pertanyaan...</span>
@@ -97,7 +83,6 @@
                 </div>
             </div>
 
-            {{-- Footer Navigation --}}
             <div class="border-t border-gray-100 p-4 md:p-6 bg-white/80 backdrop-blur flex justify-between items-center">
                 <button onclick="prevQuestion()" id="btn-prev" 
                     class="px-4 py-2 rounded-lg text-gray-400 hover:text-teal-600 hover:bg-teal-50 transition-colors flex items-center text-sm font-medium disabled:opacity-0">
@@ -106,10 +91,6 @@
 
                 <div class="flex items-center space-x-4">
                     <span id="autosave-status" class="text-xs text-gray-400 italic hidden">Tersimpan</span>
-                    <button onclick="manualNext()" id="btn-skip"
-                        class="hidden text-sm text-gray-400 hover:text-gray-600 underline px-2">
-                        Lewati
-                    </button>
                 </div>
             </div>
         </div>
@@ -117,7 +98,6 @@
     </div>
 </div>
 
-{{-- CSS Tambahan untuk Animasi --}}
 <style>
     @keyframes blob {
         0% { transform: translate(0px, 0px) scale(1); }
@@ -143,9 +123,21 @@
 
 <script>
 // ==================== CONFIGURATION ====================
+// ==================== CONFIGURATION ====================
 const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
-// Global State
+// Check storage availability
+const STORAGE_AVAILABLE = (() => {
+    try {
+        sessionStorage.setItem('test', '1');
+        sessionStorage.removeItem('test');
+        return true;
+    } catch (e) {
+        console.warn('⚠️ SessionStorage not available, using memory only');
+        return false;
+    }
+})();
+
 let quizData = {};
 let currentCategory = 1;
 let currentQuestions = []; 
@@ -154,8 +146,8 @@ let userAnswers = {};
 let idPemeriksaan = null;
 let pendingAnswers = [];
 let saveTimeout = null;
+let isFinishing = false;
 
-// Judul Kategori (Bisa disesuaikan)
 const categoryTitles = {
     1: 'Screening Inklusi & Eksklusi',
     2: 'Analisis Mata Lelah',
@@ -166,46 +158,109 @@ const categoryTitles = {
     7: 'Analisis Mata Sensitif'
 };
 
-// ==================== CORE FUNCTIONS ====================
+// ==================== STORAGE HELPERS ====================
 
-// 1. Init Load
+function saveToStorage(key, data) {
+    if (STORAGE_AVAILABLE) {
+        try {
+            sessionStorage.setItem(key, JSON.stringify(data));
+        } catch (e) {
+            console.warn('Storage save failed:', e);
+        }
+    }
+}
+
+function loadFromStorage(key) {
+    if (STORAGE_AVAILABLE) {
+        try {
+            const data = sessionStorage.getItem(key);
+            return data ? JSON.parse(data) : null;
+        } catch (e) {
+            console.warn('Storage load failed:', e);
+        }
+    }
+    return null;
+}
+
+function clearSessionData() {
+    console.log('🧹 Clearing session...');
+    if (STORAGE_AVAILABLE) {
+        for (let i = 1; i <= 7; i++) {
+            sessionStorage.removeItem(`cat_${i}_answers`);
+        }
+    }
+    userAnswers = {};
+    pendingAnswers = [];
+}
+
+// ==================== UI HELPERS ====================
+
+function showContentLoading(show) {
+    const container = document.getElementById('question-container');
+    const loader = document.getElementById('question-loading');
+    if (container && loader) {
+        if (show) {
+            container.style.display = 'none';
+            loader.style.display = 'flex';
+        } else {
+            container.style.display = 'block';
+            loader.style.display = 'none';
+        }
+    }
+}
+
+function showAutoSaveStatus() {
+    const el = document.getElementById('autosave-status');
+    if (el) {
+        el.classList.remove('hidden');
+        el.innerText = 'Menyimpan...';
+        setTimeout(() => el.innerText = 'Tersimpan', 1000);
+        setTimeout(() => el.classList.add('hidden'), 3000);
+    }
+}
+
+// ==================== INIT ====================
+
 document.addEventListener('DOMContentLoaded', async () => {
-    sessionStorage.clear(); // Reset session agar bersih
-    
-    // Buat Pemeriksaan Baru
     const created = await createPemeriksaan();
     if (created) {
-        // Hide loading overlay
         setTimeout(() => {
-            document.getElementById('global-loading').style.opacity = '0';
-            setTimeout(() => document.getElementById('global-loading').style.display = 'none', 500);
+            const loading = document.getElementById('global-loading');
+            if (loading) {
+                loading.style.opacity = '0';
+                setTimeout(() => loading.style.display = 'none', 500);
+            }
             loadCategory(1);
-        }, 1000); // Fake delay dikit biar kerasa "loading system"
+        }, 1000);
     } else {
         alert('Gagal inisialisasi sistem. Silakan refresh.');
     }
 });
 
-async function loadCategory(catId) {
-    // Transisi loading antar kategori
-    showContentLoading(true);
-    await batchSaveJawaban();
+// ==================== CORE FUNCTIONS ====================
 
+async function loadCategory(catId) {
+    showContentLoading(true);
     currentCategory = catId;
-    const stored = sessionStorage.getItem(`cat_${catId}_answers`);
-    if (stored) Object.assign(userAnswers, JSON.parse(stored));
+    
+    // Restore jawaban dari storage
+    const stored = loadFromStorage(`cat_${catId}_answers`);
+    if (stored) {
+        Object.assign(userAnswers, stored);
+    }
 
     if (!quizData[catId]) await fetchPertanyaan(catId);
 
     const category = quizData[catId];
     
-    // Update Sidebar Info
     const titleEl = document.getElementById('category-title');
-    titleEl.style.opacity = 0;
-    setTimeout(() => {
-        titleEl.innerText = category.title;
-        titleEl.style.opacity = 1;
-    }, 300);
+    if (titleEl) {
+        titleEl.style.opacity = 0;
+        setTimeout(() => {
+            titleEl.innerText = category.title;
+            titleEl.style.opacity = 1;
+        }, 300);
+    }
 
     currentQuestions = category.questions;
     currentQIndex = 0;
@@ -218,24 +273,34 @@ function renderCurrentQuestion() {
     const q = currentQuestions[currentQIndex];
     const total = currentQuestions.length;
     
-    // Update Counters
-    document.getElementById('question-counter-large').innerHTML = `${currentQIndex + 1}<span class="text-teal-600 text-lg">/${total}</span>`;
-    document.getElementById('mobile-counter').innerText = `${currentQIndex + 1} / ${total}`;
+    const counterLarge = document.getElementById('question-counter-large');
+    const mobileCounter = document.getElementById('mobile-counter');
     
-    // Update Progress Bar
+    if (counterLarge) {
+        counterLarge.innerHTML = `${currentQIndex + 1}<span class="text-teal-600 text-lg">/${total}</span>`;
+    }
+    if (mobileCounter) {
+        mobileCounter.innerText = `${currentQIndex + 1} / ${total}`;
+    }
+    
     const progress = Math.round(((currentQIndex + 1) / total) * 100);
-    document.getElementById('progress-bar').style.width = `${progress}%`;
-    document.getElementById('progress-text').innerText = `${progress}%`;
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+    
+    if (progressBar) progressBar.style.width = `${progress}%`;
+    if (progressText) progressText.innerText = `${progress}%`;
 
-    // Render Text Soal
     const qText = document.getElementById('q-text');
-    qText.classList.remove('animate-fade-in-up'); // Reset animasi
-    void qText.offsetWidth; // Trigger reflow
-    qText.innerText = q.question;
-    qText.classList.add('animate-fade-in-up');
+    if (qText) {
+        qText.classList.remove('animate-fade-in-up');
+        void qText.offsetWidth;
+        qText.innerText = q.question;
+        qText.classList.add('animate-fade-in-up');
+    }
 
-    // Render Options
     const container = document.getElementById('options-container');
+    if (!container) return;
+    
     container.innerHTML = '';
     
     const savedAnswer = userAnswers[`${currentCategory}-${currentQIndex}`];
@@ -244,7 +309,6 @@ function renderCurrentQuestion() {
         const text = typeof opt === 'string' ? opt : opt.text;
         const isSelected = savedAnswer === text;
 
-        // Create Modern Button
         const btn = document.createElement('button');
         btn.className = `
             w-full group relative p-4 md:p-5 rounded-2xl text-left border transition-all duration-300 ease-out
@@ -254,9 +318,8 @@ function renderCurrentQuestion() {
                 : 'bg-white border-gray-200 hover:border-teal-300 hover:bg-gray-50'}
         `;
         
-        // Animation Delay Staggering (biar muncul satu2)
         btn.style.animation = `fadeInUp 0.5s ease-out forwards ${idx * 100}ms`;
-        btn.style.opacity = '0'; // Start hidden for animation
+        btn.style.opacity = '0';
 
         btn.innerHTML = `
             <div class="flex items-center space-x-4">
@@ -273,47 +336,45 @@ function renderCurrentQuestion() {
         container.appendChild(btn);
     });
 
-    // Nav Buttons State
     const btnPrev = document.getElementById('btn-prev');
-    btnPrev.disabled = (currentQIndex === 0 && currentCategory === 1);
-    btnPrev.style.opacity = btnPrev.disabled ? '0' : '1';
+    if (btnPrev) {
+        btnPrev.disabled = (currentQIndex === 0 && currentCategory === 1);
+        btnPrev.style.opacity = btnPrev.disabled ? '0' : '1';
+    }
 }
 
 function selectOption(val) {
-    // Save Logic
     const key = `${currentCategory}-${currentQIndex}`;
     userAnswers[key] = val;
     
-    // Update Storage & API Queue
+    // Simpan ke storage
     const catKey = `cat_${currentCategory}_answers`;
-    const currentSessionData = JSON.parse(sessionStorage.getItem(catKey) || '{}');
+    const currentSessionData = loadFromStorage(catKey) || {};
     currentSessionData[key] = val;
-    sessionStorage.setItem(catKey, JSON.stringify(currentSessionData));
+    saveToStorage(catKey, currentSessionData);
 
-    // API Payload Prep
     const q = currentQuestions[currentQIndex];
     let cf = (q.type === 'gejala' && q.nilai_map) ? q.nilai_map[val] : null;
     
     const payload = { type: q.type, id: q.id, answer: val, nilai: cf };
     
-    // Manage Pending Queue
     const existingIdx = pendingAnswers.findIndex(p => p.id === q.id);
     if (existingIdx > -1) pendingAnswers[existingIdx] = payload;
     else pendingAnswers.push(payload);
 
-    showAutoSaveStatus();
-    scheduleSave();
+    if (currentCategory === 1) {
+        showAutoSaveStatus();
+        scheduleSave();
+    }
 
-    // UI Feedback & Auto Next
-    renderCurrentQuestion(); // Re-render to show selection state
+    renderCurrentQuestion();
     
     setTimeout(() => {
         nextQuestion();
-    }, 400); // Delay natural
+    }, 400);
 }
 
 function nextQuestion() {
-    // Cek Wajib Jawab
     if (!userAnswers[`${currentCategory}-${currentQIndex}`]) return;
 
     if (currentQIndex < currentQuestions.length - 1) {
@@ -334,8 +395,12 @@ function prevQuestion() {
 }
 
 async function nextCategory() {
-    await batchSaveJawaban();
+    if (isFinishing) return;
 
+    if (currentCategory === 1) {
+        await batchSaveJawaban(); 
+    }
+    
     if (currentCategory < 7) {
         loadCategory(currentCategory + 1);
     } else {
@@ -343,16 +408,27 @@ async function nextCategory() {
     }
 }
 
-// ==================== API HANDLERS (Standard) ====================
+// ==================== API HANDLERS ====================
 
 async function createPemeriksaan() {
     try {
         const res = await fetch('/api/pemeriksaan', {
-            method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken }, body: JSON.stringify({})
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify({})
         });
         const data = await res.json();
-        if (data.success) { idPemeriksaan = data.id_pemeriksaan; return true; }
-    } catch (e) { console.error(e); }
+        if (data.success) {
+            idPemeriksaan = data.id_pemeriksaan;
+            console.log('✅ Created:', idPemeriksaan);
+            return true;
+        }
+    } catch (e) {
+        console.error('❌ Create error:', e);
+    }
     return false;
 }
 
@@ -369,102 +445,222 @@ async function fetchPertanyaan(catId) {
                     question: item.question,
                     options: item.options,
                     nilai_map: (item.type === 'gejala' && item.options) 
-                        ? item.options.reduce((acc, opt) => { acc[opt.text] = opt.nilai; return acc; }, {}) : null
+                        ? item.options.reduce((acc, opt) => { 
+                            acc[opt.text] = opt.nilai; 
+                            return acc; 
+                        }, {}) 
+                        : null
                 }))
             };
+            console.log(`✅ Loaded cat ${catId}`);
         }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+        console.error('❌ Fetch error:', e);
+    }
 }
 
 function scheduleSave() {
     clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(batchSaveJawaban, 2000);
+    saveTimeout = setTimeout(() => batchSaveJawaban(), 2000);
 }
 
 async function batchSaveJawaban() {
-    if (pendingAnswers.length === 0 || !idPemeriksaan) return;
-    const toSend = [...pendingAnswers];
-    pendingAnswers = [];
+    const screening = pendingAnswers.filter(a => a.type === 'inklusi' || a.type === 'eksklusi');
+    
+    if (screening.length === 0 || !idPemeriksaan) return;
 
     try {
-        // Split logic for Screening vs Gejala endpoints
-        const screening = toSend.filter(a => a.type === 'inklusi' || a.type === 'eksklusi');
-        const gejala = toSend.filter(a => a.type === 'gejala');
+        const mapS = {};
+        screening.forEach(a => { mapS[a.id] = a.answer; });
+        
+        pendingAnswers = pendingAnswers.filter(a => a.type !== 'inklusi' && a.type !== 'eksklusi');
 
-        if (screening.length) {
-            const mapS = {}; screening.forEach(a => mapS[a.id] = a.answer);
-            const res = await fetch('/api/screening', {
-                method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-                body: JSON.stringify({ id_pemeriksaan: idPemeriksaan, jawaban: mapS })
-            });
-            const r = await res.json();
-            if (r.lolos === false) {
-                alert(r.message || 'Maaf, Anda tidak lolos screening.');
-                window.location.href = '/';
-            }
+        const res = await fetch('/api/screening', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+            body: JSON.stringify({
+                id_pemeriksaan: idPemeriksaan,
+                jawaban: mapS
+            })
+        });
+        
+        const r = await res.json();
+        
+        if (r.lolos === false && currentCategory === 1) {
+            console.log('❌ Screening failed');
+            clearSessionData();
+            alert(r.message || 'Maaf, Anda tidak lolos screening.');
+            window.location.href = '/';
+            return;
         }
-        if (gejala.length) {
-            await fetch('/api/jawaban', {
-                method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-                body: JSON.stringify({ id_pemeriksaan: idPemeriksaan, jawaban: gejala })
-            });
-        }
+        
+        console.log('✅ Screening Saved');
     } catch (e) {
-        pendingAnswers = [...toSend, ...pendingAnswers];
+        console.error('❌ Save error:', e);
     }
 }
+
+// ==================== FINISH EXAM (FIXED) ====================
 
 async function finishExam() {
-    // Tampilan Loading Akhir Yang Keren
-    document.getElementById('question-container').innerHTML = `
+    if (isFinishing) return;
+    isFinishing = true;
+
+    console.log('=== FINISH EXAM STARTED ===');
+    console.log('ID Pemeriksaan:', idPemeriksaan);
+
+    const container = document.getElementById('question-container');
+    const optionsContainer = document.getElementById('options-container');
+    
+    if (!container) {
+        console.error('Container not found!');
+        isFinishing = false;
+        return;
+    }
+
+    container.innerHTML = `
         <div class="flex flex-col items-center justify-center h-full py-20 animate-fade-in-up">
-            <div class="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center mb-6 relative">
+            <div class="w-24 h-24 bg-teal-50 rounded-full flex items-center justify-center mb-6 relative">
                 <div class="absolute inset-0 rounded-full border-4 border-teal-100 border-t-teal-600 animate-spin"></div>
-                <i class="fas fa-brain text-teal-600 text-2xl"></i>
+                <i class="fas fa-microchip text-teal-600 text-3xl"></i>
             </div>
-            <h2 class="text-2xl font-bold text-gray-800 mb-2">Menganalisis Data...</h2>
-            <p class="text-gray-500 text-center max-w-md">Sistem Pakar sedang menghitung nilai Certainty Factor berdasarkan jawaban Anda.</p>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Sedang Menganalisis...</h2>
+            <p class="text-gray-500 text-center max-w-md">Sistem Pakar sedang menghitung tingkat risiko CVS Anda.</p>
         </div>
     `;
-    document.getElementById('options-container').innerHTML = '';
-
-    await batchSaveJawaban();
     
-    try {
-        const res = await fetch('/api/diagnosis', {
-            method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-            body: JSON.stringify({ id_pemeriksaan: idPemeriksaan })
-        });
-        const data = await res.json();
-        if (data.success) {
-             window.location.href = `/hasil/${idPemeriksaan}`;
-        }
-    } catch (e) {
-        alert('Gagal memproses data.');
+    if (optionsContainer) {
+        optionsContainer.innerHTML = '';
+    }
+
+    if (!idPemeriksaan) {
+        alert('Error: ID Pemeriksaan tidak ditemukan');
+        isFinishing = false;
         window.location.href = '/';
+        return;
+    }
+
+    console.log('=== COLLECTING ALL ANSWERS ===');
+    
+    const allGejalaAnswers = [];
+    
+    for (let cat = 2; cat <= 7; cat++) {
+        const storedKey = `cat_${cat}_answers`;
+        const storedData = loadFromStorage(storedKey);
+        
+        if (storedData) {
+            console.log(`✅ Category ${cat} from session:`, Object.keys(storedData).length, 'answers');
+            Object.assign(userAnswers, storedData);
+        }
+        
+        if (!quizData[cat]) {
+            console.log(`⏳ Loading category ${cat}...`);
+            await fetchPertanyaan(cat);
+        }
+        
+        const category = quizData[cat];
+        if (!category || !category.questions) {
+            console.warn(`⚠️ Category ${cat} empty`);
+            continue;
+        }
+
+        const questions = category.questions;
+        
+        for (let qIdx = 0; qIdx < questions.length; qIdx++) {
+            const key = `${cat}-${qIdx}`;
+            const answer = userAnswers[key];
+            
+            if (!answer) continue;
+
+            const question = questions[qIdx];
+            
+            let nilaiCF = 0;
+            if (question.nilai_map && question.nilai_map[answer]) {
+                nilaiCF = question.nilai_map[answer];
+            }
+
+            console.log(`📊 ${key}: ID=${question.id}, Answer="${answer}", CF=${nilaiCF}`);
+
+            allGejalaAnswers.push({
+                type: 'gejala',
+                id: question.id,
+                answer: answer,
+                nilai: nilaiCF
+            });
+        }
+    }
+
+    console.log('=== SUMMARY ===');
+    console.log('📝 Total Answers:', allGejalaAnswers.length);
+
+    if (allGejalaAnswers.length === 0) {
+        alert('❌ Tidak ada jawaban yang tersimpan.\n\nSilakan ulangi pemeriksaan dari awal.');
+        isFinishing = false;
+        clearSessionData();
+        window.location.href = '/pertanyaan';
+        return;
+    }
+
+    try {
+        console.log('🚀 SENDING TO BACKEND...');
+        
+        const response = await fetch('/api/pemeriksaan/submit-total', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify({
+                id_pemeriksaan: idPemeriksaan,
+                jawaban: allGejalaAnswers
+            })
+        });
+
+        console.log('📡 Response Status:', response.status);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Server Error:', errorText);
+            throw new Error(`Server error: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('✅ Response Data:', result);
+
+        if (result.success) {
+            console.log('🎉 SUCCESS!');
+            console.log('📊 Debug:', result.debug);
+            
+            clearSessionData();
+            
+            setTimeout(() => {
+                window.location.href = result.redirect_url;
+            }, 500);
+            
+        } else {
+            throw new Error(result.message || 'Gagal memproses hasil');
+        }
+
+    } catch (error) {
+        console.error('❌ CRITICAL ERROR:', error);
+        isFinishing = false;
+        
+        container.innerHTML = `
+            <div class="flex flex-col items-center justify-center h-full py-20 text-center">
+                <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-3xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Terjadi Kesalahan</h2>
+                <p class="text-gray-600 mb-6 max-w-md">${error.message}</p>
+                <button onclick="location.reload()" class="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700">
+                    🔄 Coba Lagi
+                </button>
+            </div>
+        `;
     }
 }
 
-// Helper
-function showContentLoading(show) {
-    const container = document.getElementById('question-container');
-    const loader = document.getElementById('question-loading');
-    if (show) {
-        container.style.display = 'none';
-        loader.style.display = 'flex';
-    } else {
-        container.style.display = 'block';
-        loader.style.display = 'none';
-    }
-}
-
-function showAutoSaveStatus() {
-    const el = document.getElementById('autosave-status');
-    el.classList.remove('hidden');
-    el.innerText = 'Menyimpan...';
-    setTimeout(() => el.innerText = 'Tersimpan', 1000);
-    setTimeout(() => el.classList.add('hidden'), 3000);
-}
-
+// Panggil saat debugging (opsional)
+// window.debugCurrentState = debugCurrentState;
 </script>
 @endsection

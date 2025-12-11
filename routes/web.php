@@ -34,6 +34,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/pertanyaan', [PemeriksaanController::class, 'getPertanyaan'])->name('api.pertanyaan.get');
         Route::post('/screening', [PemeriksaanController::class, 'simpanScreening'])->name('api.screening.save');
         Route::post('/jawaban', [PemeriksaanController::class, 'simpanJawaban'])->name('api.jawaban.save');
+        Route::post('/pemeriksaan/submit-total', [App\Http\Controllers\PemeriksaanController::class, 'submitTotal']);
         
         // Route Penting untuk Hitung Diagnosis
         Route::post('/diagnosis', [PemeriksaanController::class, 'hitungDiagnosis'])->name('api.diagnosis.calculate');

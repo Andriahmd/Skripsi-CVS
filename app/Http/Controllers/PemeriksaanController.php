@@ -18,9 +18,265 @@ class PemeriksaanController extends Controller
         $this->middleware('auth');
     }
 
-    /**
-     * 📋 Data pertanyaan screening (hardcoded)
-     */
+    // ==========================================
+    // SUBMIT TOTAL - FIXED VERSION v2 🔥🔥
+    // ==========================================
+    public function submitTotal(Request $request)
+    {
+        Log::info('=== SUBMIT TOTAL START ===');
+        Log::info('Raw Request:', $request->all());
+
+        try {
+            $validated = $request->validate([
+                'id_pemeriksaan' => 'required|exists:pemeriksaan,id',
+                'jawaban' => 'nullable|array'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Validasi Error:', $e->errors());
+            return response()->json([
+                'success' => false,
+                'message' => 'Data tidak valid: ' . json_encode($e->errors())
+            ], 422);
+        }
+
+        $idPemeriksaan = $validated['id_pemeriksaan'];
+        $jawabanBaru = $validated['jawaban'] ?? [];
+
+        Log::info("Processing ID: {$idPemeriksaan}, Jawaban Count: " . count($jawabanBaru));
+
+        try {
+            DB::beginTransaction();
+
+            // ============================================
+            // TAHAP 1: SIMPAN JAWABAN
+            // ============================================
+            $jumlahTersimpan = 0;
+
+            if (!empty($jawabanBaru)) {
+                // Filter jawaban valid
+                $validJawaban = array_filter($jawabanBaru, function($item) {
+                    $valid = isset($item['id']) && 
+                           isset($item['answer']) && 
+                           isset($item['nilai']) &&
+                           is_numeric($item['id']) &&
+                           is_numeric($item['nilai']);
+                    
+                    if (!$valid) {
+                        Log::warning('Invalid jawaban item:', $item);
+                    }
+                    return $valid;
+                });
+
+                Log::info("Valid jawaban: " . count($validJawaban));
+
+                if (!empty($validJawaban)) {
+                    $gejalaIds = array_map(fn($item) => (int) $item['id'], $validJawaban);
+                    
+                    // Hapus jawaban lama
+                    $deleted = Jawaban::where('id_pemeriksaan', $idPemeriksaan)
+                        ->whereIn('id_gejala', $gejalaIds)
+                        ->delete();
+                    
+                    Log::info("Deleted old answers: {$deleted}");
+
+                    // Ambil master gejala
+                    $masterGejala = Gejala::whereIn('id', $gejalaIds)->get()->keyBy('id');
+                    Log::info("Master gejala found: " . $masterGejala->count());
+
+                    $dataInsert = [];
+                    $now = now();
+
+                    foreach ($validJawaban as $item) {
+                        $gejalaId = (int) $item['id'];
+                        
+                        if (!isset($masterGejala[$gejalaId])) {
+                            Log::warning("Gejala {$gejalaId} not found in master");
+                            continue;
+                        }
+
+                        $bobotPakar = (float) $masterGejala[$gejalaId]->bobot;
+                        $cfUser = (float) $item['nilai'];
+                        $nilaiCF = $bobotPakar * $cfUser;
+
+                        Log::info("Gejala {$gejalaId}: Pakar={$bobotPakar}, User={$cfUser}, CF={$nilaiCF}");
+
+                        $dataInsert[] = [
+                            'id_pemeriksaan' => $idPemeriksaan,
+                            'id_gejala' => $gejalaId,
+                            'jawaban_text' => $item['answer'],
+                            'nilai_cf' => $nilaiCF,
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ];
+                    }
+
+                    if (!empty($dataInsert)) {
+                        Jawaban::insert($dataInsert);
+                        $jumlahTersimpan = count($dataInsert);
+                        Log::info("✅ Inserted {$jumlahTersimpan} answers");
+                    }
+                }
+            }
+
+            // ============================================
+            // TAHAP 2: HITUNG DIAGNOSA (CRITICAL FIX!)
+            // ============================================
+            Log::info('=== CALCULATING CF COMBINE ===');
+
+            // Ambil SEMUA jawaban dengan CF > 0
+            $allAnswers = Jawaban::where('id_pemeriksaan', $idPemeriksaan)
+                ->where('nilai_cf', '>', 0)
+                ->get(['id_gejala', 'nilai_cf']);
+
+            Log::info("Total answers with CF > 0: " . $allAnswers->count());
+            Log::info("CF Values:", $allAnswers->pluck('nilai_cf')->toArray());
+
+            $persentase = 0;
+            $cfCombine = 0;
+
+            if ($allAnswers->count() > 0) {
+                // Ambil array CF values dan sort descending
+                $cfValues = $allAnswers->pluck('nilai_cf')->toArray();
+                rsort($cfValues);
+
+                Log::info("Sorted CF Values:", $cfValues);
+
+                // Inisialisasi dengan nilai pertama
+                $cfCombine = $cfValues[0];
+                Log::info("Initial CF: {$cfCombine}");
+
+                // CF Combine untuk nilai kedua dan seterusnya
+                for ($i = 1; $i < count($cfValues); $i++) {
+                    $cfOld = $cfCombine;
+                    $cfNew = $cfValues[$i];
+                    $cfCombine = $cfOld + ($cfNew * (1 - $cfOld));
+                    
+                    Log::info(sprintf(
+                        "Step %d: %.4f + (%.4f * (1 - %.4f)) = %.4f",
+                        $i, $cfOld, $cfNew, $cfOld, $cfCombine
+                    ));
+                }
+
+                // Konversi ke persentase
+                $persentase = round($cfCombine * 100, 2);
+                Log::info("Final Persentase: {$persentase}%");
+            } else {
+                Log::warning("No CF values found! Persentase will be 0");
+            }
+
+            // ============================================
+            // TAHAP 3: DETERMINE DIAGNOSIS LEVEL
+            // ============================================
+            $diagnosisData = $this->getDiagnosisLevel($persentase);
+            Log::info("Diagnosis determined:", $diagnosisData);
+
+            // ============================================
+            // TAHAP 4: UPDATE PEMERIKSAAN
+            // ============================================
+            $updateData = [
+                'persentase_cf' => $persentase,
+                'hasil_diagnosa' => $diagnosisData['level']
+            ];
+
+            Log::info("Updating pemeriksaan with:", $updateData);
+
+            $updated = Pemeriksaan::where('id', $idPemeriksaan)->update($updateData);
+
+            if ($updated) {
+                Log::info("✅ Pemeriksaan updated successfully");
+            } else {
+                Log::warning("⚠️ Pemeriksaan update returned 0 (might already have same values)");
+            }
+
+            // Verify update
+            $verification = Pemeriksaan::find($idPemeriksaan);
+            Log::info("Verification - Persentase: {$verification->persentase_cf}, Diagnosa: {$verification->hasil_diagnosa}");
+
+            DB::commit();
+            Log::info('=== TRANSACTION COMMITTED ===');
+
+            return response()->json([
+                'success' => true,
+                'redirect_url' => route('hasil.show', $idPemeriksaan),
+                'debug' => [
+                    'id_pemeriksaan' => $idPemeriksaan,
+                    'jawaban_tersimpan' => $jumlahTersimpan,
+                    'total_cf_values' => $allAnswers->count(),
+                    'cf_combine' => round($cfCombine, 4),
+                    'persentase' => $persentase,
+                    'diagnosis_level' => $diagnosisData['level']
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            Log::error('=== EXCEPTION IN SUBMIT TOTAL ===');
+            Log::error('Message: ' . $e->getMessage());
+            Log::error('File: ' . $e->getFile() . ' Line: ' . $e->getLine());
+            Log::error('Trace: ' . $e->getTraceAsString());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error processing data',
+                'error' => $e->getMessage(),
+                'trace' => config('app.debug') ? $e->getTraceAsString() : null
+            ], 500);
+        }
+    }
+
+    // ==========================================
+    // FUNGSI PENDUKUNG
+    // ==========================================
+    
+    private function getDiagnosisLevel($persentase)
+    {
+        Log::info("Getting diagnosis level for: {$persentase}%");
+        
+        if ($persentase >= 80) {
+            return [
+                'level' => 'Sangat Berat',
+                'color' => 'red',
+                'keterangan' => 'Segera ke dokter mata.',
+                'rekomendasi' => 'Istirahat total dari layar, konsultasi medis segera.'
+            ];
+        }
+        
+        if ($persentase >= 60) {
+            return [
+                'level' => 'Berat',
+                'color' => 'orange',
+                'keterangan' => 'Gejala serius.',
+                'rekomendasi' => 'Batasi layar maksimal, pakai kacamata anti-radiasi.'
+            ];
+        }
+        
+        if ($persentase >= 40) {
+            return [
+                'level' => 'Sedang',
+                'color' => 'yellow',
+                'keterangan' => 'Perlu perhatian.',
+                'rekomendasi' => 'Terapkan 20-20-20 rule, atur pencahayaan.'
+            ];
+        }
+        
+        if ($persentase >= 20) {
+            return [
+                'level' => 'Ringan',
+                'color' => 'blue',
+                'keterangan' => 'Gejala awal.',
+                'rekomendasi' => 'Istirahat berkala, kedipkan mata lebih sering.'
+            ];
+        }
+        
+        return [
+            'level' => 'Normal',
+            'color' => 'green',
+            'keterangan' => 'Mata sehat.',
+            'rekomendasi' => 'Pertahankan kebiasaan baik.'
+        ];
+    }
+
     private function getPertanyaanScreening()
     {
         return [
@@ -38,21 +294,11 @@ class PemeriksaanController extends Controller
         ];
     }
 
-    /**
-     * 🏠 Tampilkan form pemeriksaan
-     */
     public function showForm()
     {
         return view('pertanyaan');
     }
 
-    /**
-     * ✅ Buat pemeriksaan baru
-     */
-   /**
-     * ✅ Buat pemeriksaan baru (Smart Create)
-     * Mencegah spam data NULL jika user refresh halaman
-     */
     public function createPemeriksaan(Request $request)
     {
         try {
@@ -65,74 +311,46 @@ class PemeriksaanController extends Controller
                 ], 400);
             }
 
-            // 🔍 CEK APAKAH ADA PEMERIKSAAN YANG BELUM SELESAI?
-            // (Cek yang hasil_diagnosa-nya masih NULL milik user ini)
             $existingPemeriksaan = Pemeriksaan::where('id_user', $user->id)
-                ->whereNull('hasil_diagnosa') // Asumsi kolom ini NULL jika belum diagnosa
+                ->whereNull('hasil_diagnosa')
                 ->latest()
                 ->first();
 
             if ($existingPemeriksaan) {
-                // Kalau ada yang gantung, pakai ID itu lagi (JANGAN BUAT BARU)
-                Log::info('Resuming pemeriksaan', ['id' => $existingPemeriksaan->id]);
-                
                 return response()->json([
                     'success' => true,
                     'id_pemeriksaan' => $existingPemeriksaan->id,
                     'message' => 'Melanjutkan pemeriksaan sebelumnya...',
-                    'user_info' => [
-                        'nama' => $user->name,
-                        'umur' => $user->umur
-                    ]
                 ]);
             }
 
-            // Kalau tidak ada yang gantung, baru buat BARU
             $pemeriksaan = Pemeriksaan::create([
                 'id_user' => $user->id,
                 'tanggal' => now(),
                 'persentase_cf' => 0,
-                'hasil_diagnosa' => null // Pastikan defaultnya null
-            ]);
-
-            Log::info('Pemeriksaan created', [
-                'id' => $pemeriksaan->id,
-                'user' => $user->name
+                'hasil_diagnosa' => null
             ]);
 
             return response()->json([
                 'success' => true,
                 'id_pemeriksaan' => $pemeriksaan->id,
                 'message' => 'Pemeriksaan berhasil dibuat!',
-                'user_info' => [
-                    'nama' => $user->name,
-                    'umur' => $user->umur
-                ]
             ]);
         } catch (\Exception $e) {
-            Log::error('Create pemeriksaan failed: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal membuat pemeriksaan: ' . $e->getMessage()
-            ], 500);
+            Log::error('Create error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Server Error'], 500);
         }
     }
 
-    /**
-     * 📝 Get pertanyaan berdasarkan kategori
-     */
     public function getPertanyaan(Request $request)
     {
         $kategori = (int) $request->get('kategori', 1);
 
         try {
             if ($kategori === 1) {
-                // ✅ SCREENING: Pertanyaan inklusi/eksklusi
                 $pertanyaan = $this->getPertanyaanScreening();
-                
                 $data = [];
-                
-                // Pertanyaan Inklusi
+
                 foreach ($pertanyaan['inklusi'] as $id => $text) {
                     $data[] = [
                         'id' => 'inklusi_' . $id,
@@ -142,7 +360,6 @@ class PemeriksaanController extends Controller
                     ];
                 }
                 
-                // Pertanyaan Eksklusi
                 foreach ($pertanyaan['eksklusi'] as $id => $text) {
                     $data[] = [
                         'id' => 'eksklusi_' . $id,
@@ -151,23 +368,21 @@ class PemeriksaanController extends Controller
                         'options' => ['Ya', 'Tidak']
                     ];
                 }
-
             } else {
-                // ✅ GEJALA: Pertanyaan berdasarkan kategori
                 $rangeMap = [
-                    2 => ['G00', 'G03'], // Mata Lelah
-                    3 => ['G04', 'G07'], // Mata Kering
-                    4 => ['G08', 'G11'], // Mata Kabur
-                    5 => ['G12', 'G15'], // Mata Gatal
-                    6 => ['G16', 'G19'], // Mata Berair
-                    7 => ['G20', 'G23'], // Mata Sensitif
+                    2 => ['G00', 'G03'],
+                    3 => ['G04', 'G07'],
+                    4 => ['G08', 'G11'],
+                    5 => ['G12', 'G15'],
+                    6 => ['G16', 'G19'],
+                    7 => ['G20', 'G23'],
                 ];
-
+                
                 $range = $rangeMap[$kategori] ?? ['G00', 'G03'];
 
                 $gejalaList = Gejala::whereBetween('kode_gejala', $range)
                     ->orderBy('kode_gejala')
-                    ->get();
+                    ->get(['id', 'kode_gejala', 'deskripsi', 'bobot']);
 
                 $data = [];
                 foreach ($gejalaList as $gejala) {
@@ -187,337 +402,81 @@ class PemeriksaanController extends Controller
                 }
             }
 
-            return response()->json([
-                'success' => true,
-                'kategori' => $kategori,
-                'data' => $data,
-                'total' => count($data)
-            ]);
+            return response()->json(['success' => true, 'data' => $data]);
 
         } catch (\Exception $e) {
-            Log::error('Get pertanyaan failed: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengambil pertanyaan: ' . $e->getMessage()
-            ], 500);
+            Log::error('Get Pertanyaan Error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Gagal load data'], 500);
         }
     }
 
-    /**
-     * 💾 Simpan jawaban screening (inklusi/eksklusi)
-     */
     public function simpanScreening(Request $request)
-    {
-        Log::info("=== SIMPAN SCREENING ===");
+{
+    $validated = $request->validate([
+        'id_pemeriksaan' => 'required|exists:pemeriksaan,id',
+        'jawaban' => 'required|array', // ❌ Ini harusnya object/map, bukan array
+    ]);
 
-        $validated = $request->validate([
-            'id_pemeriksaan' => 'required|exists:pemeriksaan,id',
-            'jawaban' => 'required|array|size:7', // 5 inklusi + 2 eksklusi
-        ]);
+    try {
+        $inclCount = 0;
+        $exclCount = 0;
 
-        try {
-            $idPemeriksaan = $validated['id_pemeriksaan'];
-            
-            $pemeriksaan = Pemeriksaan::where('id', $idPemeriksaan)
-                ->where('id_user', Auth::id())
-                ->firstOrFail();
+        // ✅ FIX: Loop as object/map
+        foreach ($validated['jawaban'] as $key => $val) {
+            if (str_starts_with($key, 'inklusi_') && $val === 'Ya')
+                $inclCount++;
 
-            $jawaban = $validated['jawaban'];
-
-            // Pisahkan jawaban inklusi dan eksklusi
-            $jawabanInklusi = [];
-            $jawabanEksklusi = [];
-
-            foreach ($jawaban as $key => $value) {
-                if (strpos($key, 'inklusi_') === 0) {
-                    $jawabanInklusi[] = $value;
-                } elseif (strpos($key, 'eksklusi_') === 0) {
-                    $jawabanEksklusi[] = $value;
-                }
-            }
-
-            // Hitung hasil screening
-            $semuaInklusiYa = count(array_filter($jawabanInklusi, fn($v) => $v === 'Ya')) === 5;
-            $adaEksklusiYa = count(array_filter($jawabanEksklusi, fn($v) => $v === 'Ya')) > 0;
-
-            // Simpan hasil screening
-            InklusiEksklusi::create([
-                'id_pemeriksaan' => $idPemeriksaan,
-                'memenuhi_inklusi' => $semuaInklusiYa,
-                'ada_eksklusi' => $adaEksklusiYa,
-            ]);
-
-            $lolos = $semuaInklusiYa && !$adaEksklusiYa;
-
-            Log::info("Screening result", [
-                'inklusi' => $semuaInklusiYa,
-                'eksklusi' => $adaEksklusiYa,
-                'lolos' => $lolos
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'lolos' => $lolos,
-                'message' => $lolos 
-                    ? 'Anda memenuhi kriteria untuk diagnosis CVS.' 
-                    : 'Anda tidak memenuhi kriteria untuk diagnosis CVS.',
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Simpan screening failed: ' . $e->getMessage());
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal menyimpan screening: ' . $e->getMessage()
-            ], 500);
+            if (str_starts_with($key, 'eksklusi_') && $val === 'Ya')
+                $exclCount++;
         }
-    }
 
-    /**
-     * 💾 Simpan jawaban gejala per kategori
-     */
-    public function simpanJawaban(Request $request)
-    {
-        Log::info("=== SIMPAN JAWABAN GEJALA ===", [
-            'id_pemeriksaan' => $request->id_pemeriksaan,
-            'jawaban_count' => count($request->jawaban ?? [])
+        $lolos = ($inclCount === 5) && ($exclCount === 0);
+
+        InklusiEksklusi::updateOrCreate(
+            ['id_pemeriksaan' => $validated['id_pemeriksaan']],
+            [
+                'memenuhi_inklusi' => ($inclCount === 5),
+                'ada_eksklusi' => ($exclCount > 0)
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'lolos' => $lolos,
+            'message' => $lolos ? 'Lolos screening' : 'Tidak lolos screening'
         ]);
 
-        $validated = $request->validate([
-            'id_pemeriksaan' => 'required|exists:pemeriksaan,id',
-            'jawaban' => 'required|array',
-            'jawaban.*.id' => 'required|exists:gejala,id',
-            'jawaban.*.answer' => 'required',
-            'jawaban.*.nilai' => 'required|numeric',
-        ]);
-
-        try {
-            $idPemeriksaan = $validated['id_pemeriksaan'];
-            
-            $pemeriksaan = Pemeriksaan::where('id', $idPemeriksaan)
-                ->where('id_user', Auth::id())
-                ->firstOrFail();
-
-            $jawabanList = $validated['jawaban'];
-            $savedCount = 0;
-
-            DB::beginTransaction();
-
-            foreach ($jawabanList as $item) {
-                $gejala = Gejala::find($item['id']);
-                
-                if ($gejala) {
-                    $cfPakar = $gejala->bobot;
-                    $cfUser = $item['nilai'];
-                    $cfGabungan = $cfPakar * $cfUser;
-
-                    Jawaban::updateOrCreate(
-                        [
-                            'id_pemeriksaan' => $idPemeriksaan,
-                            'id_gejala' => $item['id'],
-                        ],
-                        [
-                            'jawaban_text' => $item['answer'],
-                            'nilai_cf' => $cfGabungan,
-                        ]
-                    );
-                    $savedCount++;
-                }
-            }
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => "Berhasil menyimpan {$savedCount} jawaban gejala!",
-                'saved_count' => $savedCount
-            ]);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Save jawaban failed: ' . $e->getMessage());
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal menyimpan jawaban: ' . $e->getMessage()
-            ], 500);
-        }
+    } catch (\Exception $e) {
+        Log::error('Simpan Screening Error: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 500);
     }
+}
 
-    /**
-     * Hitung diagnosis final
-     */
-    public function hitungDiagnosis(Request $request)
-    {
-        Log::info("=== HITUNG DIAGNOSIS ===");
-
-        $validated = $request->validate([
-            'id_pemeriksaan' => 'required|exists:pemeriksaan,id',
-        ]);
-
-        try {
-            $idPemeriksaan = $validated['id_pemeriksaan'];
-            
-            $pemeriksaan = Pemeriksaan::where('id', $idPemeriksaan)
-                ->where('id_user', Auth::id())
-                ->firstOrFail();
-
-            // Ambil semua jawaban gejala yang sudah disimpan
-            $jawabanGejala = Jawaban::where('id_pemeriksaan', $idPemeriksaan)
-                ->whereNotNull('id_gejala')
-                ->where('nilai_cf', '>', 0)
-                ->pluck('nilai_cf')
-                ->toArray();
-
-            // Hitung CF Combine 
-            if (empty($jawabanGejala)) {
-                $persentase = 0.0;
-            } else {
-                rsort($jawabanGejala); // Sort descending
-                $cfCombine = $jawabanGejala[0];
-
-                for ($i = 1; $i < count($jawabanGejala); $i++) {
-                    $cfOld = $cfCombine;
-                    $cfNew = $jawabanGejala[$i];
-                    $cfCombine = $cfOld + ($cfNew * (1 - $cfOld));
-                }
-
-                $persentase = round($cfCombine * 100, 2);
-            }
-
-            $diagnosis = $this->getDiagnosisLevel($persentase);
-
-            // Update pemeriksaan
-            $pemeriksaan->update([
-                'persentase_cf' => $persentase,
-                'hasil_diagnosa' => $diagnosis['level'],
-            ]);
-
-            DB::commit();
-
-            // ✅ PERBAIKAN: Menambahkan 'redirect_url' agar JS tahu kemana harus pindah
-            return response()->json([
-                'success' => true,
-                'id_pemeriksaan' => $idPemeriksaan,
-                'persentase' => $persentase,
-                'diagnosis' => $diagnosis,
-                'redirect_url' => route('hasil.show', $idPemeriksaan) 
-            ]);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Hitung diagnosis failed: ' . $e->getMessage());
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal menghitung diagnosis: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * 📊 Tampilkan hasil diagnosis
-     */
     public function hasilDiagnosis($idPemeriksaan)
     {
         try {
-            $pemeriksaan = Pemeriksaan::with(['user', 'jawaban.gejala'])
-                ->where('id', $idPemeriksaan)
-                ->where('id_user', Auth::id())
-                ->firstOrFail();
+            $pemeriksaan = Pemeriksaan::with('user')->findOrFail($idPemeriksaan);
+
+            if ($pemeriksaan->id_user !== Auth::id()) {
+                abort(403);
+            }
 
             $diagnosis = $this->getDiagnosisLevel($pemeriksaan->persentase_cf);
 
-            $jawabanGejala = Jawaban::where('id_pemeriksaan', $idPemeriksaan)
-                ->whereNotNull('id_gejala')
+            $jawabanGejala = Jawaban::with('gejala')
+                ->where('id_pemeriksaan', $idPemeriksaan)
                 ->where('nilai_cf', '>', 0)
-                ->with('gejala')
-                ->orderBy('nilai_cf', 'desc')
+                ->orderByDesc('nilai_cf')
                 ->get();
 
-            // ✅ PERBAIKAN: Menggunakan nama view yang benar 'hasilpemeriksaan'
             return view('hasilpemeriksaan', compact('pemeriksaan', 'diagnosis', 'jawabanGejala'));
 
         } catch (\Exception $e) {
-            Log::error('Show hasil failed: ' . $e->getMessage());
-            return redirect()->route('pertanyaan')->with('error', 'Pemeriksaan tidak ditemukan');
-        }
-    }
-
-    /**
-     * 📜 Get riwayat pemeriksaan
-     */
-    public function getRiwayat()
-    {
-        try {
-            $riwayat = Pemeriksaan::where('id_user', Auth::id())
-                ->with('user')
-                ->orderBy('tanggal', 'desc')
-                ->get()
-                ->map(function($p) {
-                    return [
-                        'id_pemeriksaan' => $p->id,
-                        'nama_pasien' => $p->user->name,
-                        'usia' => $p->user->umur,
-                        'tanggal' => $p->tanggal->format('d/m/Y H:i'),
-                        'persentase' => $p->persentase_cf,
-                        'diagnosis' => $this->getDiagnosisLevel($p->persentase_cf)['level'],
-                    ];
-                });
-
-            return response()->json([
-                'success' => true,
-                'data' => $riwayat
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengambil riwayat: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * 🎯 Helper: Get diagnosis level
-     */
-    private function getDiagnosisLevel($persentase)
-    {
-        if ($persentase >= 80) {
-            return [
-                'level' => 'Sangat Berat',
-                'color' => 'red',
-                'keterangan' => 'Gejala CVS sangat parah, segera konsultasi dokter mata',
-                'rekomendasi' => 'Kurangi penggunaan layar drastis, istirahat total, segera konsultasi dokter spesialis mata untuk penanganan lebih lanjut.'
-            ];
-        } elseif ($persentase >= 60) {
-            return [
-                'level' => 'Berat',
-                'color' => 'orange',
-                'keterangan' => 'Gejala CVS berat, perlu penanganan serius',
-                'rekomendasi' => 'Batasi screen time, gunakan kacamata anti radiasi, terapkan aturan 20-20-20, gunakan eye drops, dan istirahat yang cukup.'
-            ];
-        } elseif ($persentase >= 40) {
-            return [
-                'level' => 'Sedang',
-                'color' => 'yellow',
-                'keterangan' => 'Gejala CVS sedang, perlu perhatian khusus',
-                'rekomendasi' => 'Terapkan aturan 20-20-20 secara konsisten, atur pencahayaan ruangan, gunakan artificial tears, dan pastikan jarak layar minimal 50cm.'
-            ];
-        } elseif ($persentase >= 20) {
-            return [
-                'level' => 'Ringan',
-                'color' => 'blue',
-                'keterangan' => 'Gejala CVS ringan, mulai terapkan pencegahan',
-                'rekomendasi' => 'Istirahat mata secara berkala, atur posisi layar sejajar mata, jaga pencahayaan yang baik, dan lakukan peregangan mata.'
-            ];
-        } else {
-            return [
-                'level' => 'Normal',
-                'color' => 'green',
-                'keterangan' => 'Tidak terindikasi CVS, kondisi mata baik',
-                'rekomendasi' => 'Pertahankan kebiasaan baik saat menggunakan layar, tetap waspada terhadap gejala awal CVS.'
-            ];
+            Log::error('Hasil Diagnosis Error: ' . $e->getMessage());
+            return redirect()->route('pertanyaan')->with('error', 'Data tidak ditemukan');
         }
     }
 }
