@@ -8,6 +8,7 @@
     "require": {
         "php": "^8.2",
         "filament/filament": "^4.1",
+        "filament/widgets": "^4.1",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1"
     },
@@ -17,7 +18,7 @@
         "laravel/pint": "^1.24",
         "laravel/sail": "^1.41",
         "mockery/mockery": "^1.6",
-        "nunomaduro/collision": "^8.6",
+        "nunomaduro/collision": "^8.6",        
         "phpunit/phpunit": "^11.5.3"
     },
     "autoload": {

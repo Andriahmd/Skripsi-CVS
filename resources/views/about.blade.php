@@ -1,59 +1,81 @@
 @extends('layouts.app')
 
 @section('content')
-{{-- UBAH DISINI: Ganti bg-gray-100 menjadi style background-color: #D7E7E5 --}}
-<section class="about-section py-12" style="background-color: #D7E7E5;">
-    <div class="container mx-auto px-4">
-        <div class="row flex flex-wrap items-center">
+{{-- Background color #D7E7E5 sesuai permintaan --}}
+<section class="about-section py-16 relative" style="background-color: #D7E7E5;">
+    <div class="container mx-auto px-6">
+        <div class="flex flex-col lg:flex-row items-center gap-12">
             
-            {{-- Kolom Gambar --}}
-            <div class="col-md-6 w-full md:w-1/2 mb-8 md:mb-0">
-                <img src="https://i.pinimg.com/1200x/a2/20/cb/a220cb6423e96fe1754b09815880f421.jpg" 
-                     alt="Computer Vision Syndrome" 
-                     class="shadow-lg"
-                     style="width: 580px; max-width: 100%; height: auto; border-radius: 12px; object-fit: cover;">
+            {{-- KOLOM KIRI: GAMBAR --}}
+            {{-- Gambar dibuat responsif, dengan sedikit styling agar elegan --}}
+            <div class="w-full lg:w-1/2">
+                <div class="relative">
+                    {{-- Dekorasi border di belakang gambar --}}
+                    <div class="absolute inset-0 border-2 border-teal-600 rounded-2xl transform translate-x-3 translate-y-3 z-0"></div>
+                    
+                    <img src="https://i.pinimg.com/1200x/a2/20/cb/a220cb6423e96fe1754b09815880f421.jpg" 
+                         alt="Computer Vision Syndrome Illustration" 
+                         class="relative z-10 w-full h-auto object-cover rounded-2xl shadow-xl hover:shadow-2xl transition-shadow duration-300"
+                         style="max-height: 600px;">
+                </div>
             </div>
             
-            {{-- Kolom Teks --}}
-            <div class="col-md-6 w-full md:w-1/2 md:pl-10">
-                <h1 class="title text-4xl font-bold text-teal-900 mb-4">Understanding Computer Vision Syndrome</h1>
-                <p class="description text-gray-700 mb-8 text-lg leading-relaxed">
-                    Computer Vision Syndrome (CVS) arises from prolonged screen exposure, causing eyestrain, headaches, blurred vision, and discomfort. Factors like poor ergonomics and uncorrected vision worsen its impact, affecting people of all ages.
-                </p>
+            {{-- KOLOM KANAN: TEKS DESKRIPTIF & CARD --}}
+            <div class="w-full lg:w-1/2 lg:pl-6">
                 
-                {{-- Item 1 --}}
-                <div class="value-item flex items-start mb-8 bg-white/50 p-4 rounded-xl border border-teal-100 hover:shadow-md transition-all">
-                    {{-- <div class="icon flex flex-shrink-0 items-center justify-center w-12 h-12 bg-teal-600 text-white rounded-full mr-5 shadow-md">
-                        <i class="fas fa-exclamation-triangle text-lg"></i>
-                    </div> --}}
-                    <div>
-                        <h3 class="value-title text-xl font-bold text-teal-800 mb-2">Dangers for Teenagers</h3>
-                        <p class="value-desc text-gray-700 mb-2">
-                            Teens face risks like myopia, sleep disruption, and reduced focus from excessive screen use, especially with gaming and online studies.
-                        </p>
-                        <p class="text-sm text-gray-600 italic">
-                            "Early prevention in teenagers significantly reduces the risk of long-term vision damage."
-                        </p>
-                    </div>
-                </div>
-                
-                {{-- Item 2 --}}
-                <div class="value-item flex items-start bg-white/50 p-4 rounded-xl border border-teal-100 hover:shadow-md transition-all">
-                    {{-- <div class="icon flex flex-shrink-0 items-center justify-center w-12 h-12 bg-teal-600 text-white rounded-full mr-5 shadow-md">
-                        <i class="fas fa-user-injured text-lg"></i>
-                    </div> --}}
-                    <div>
-                        <h3 class="value-title text-xl font-bold text-teal-800 mb-2">Impacts on the Elderly</h3>
-                        <p class="value-desc text-gray-700 mb-2">
-                            Older adults experience intensified symptoms due to age-related eye issues, such as dry eyes and fatigue, potentially worsening conditions like cataracts.
-                        </p>
-                        <p class="text-sm text-gray-600 italic">
-                            "Proper ergonomics and lighting are crucial for elderly users to maintain eye comfort."
-                        </p>
-                    </div>
+                {{-- Judul & Deskripsi Utama --}}
+                <div class="mb-8">
+                    <h4 class="text-teal-700 font-bold uppercase tracking-widest text-sm mb-2">Tentang Penyakit</h4>
+                    <h1 class="text-3xl lg:text-4xl font-extrabold text-teal-900 mb-4 leading-tight">
+                        Apa Itu <span class="text-teal-600">Computer Vision Syndrome?</span>
+                    </h1>
+                    <p class="text-gray-700 text-lg leading-relaxed text-justify">
+                        <strong>Computer Vision Syndrome (CVS)</strong> adalah istilah medis untuk kumpulan gangguan pada mata dan fisik yang timbul akibat penggunaan komputer, tablet, atau ponsel dalam waktu yang lama. Berbeda dengan membaca di kertas, piksel pada layar memaksa mata bekerja ekstra keras untuk menjaga fokus, yang memicu kelelahan visual.
+                    </p>
                 </div>
 
+                {{-- CARD SECTION (Menyamping di dalam kolom kanan) --}}
+                <div class="space-y-6">
+                    
+                    {{-- Card 1: Gejala Utama --}}
+                    <div class="group flex items-start bg-white/60 backdrop-blur-sm p-5 rounded-xl border border-teal-100 shadow-sm hover:shadow-md hover:bg-white transition-all duration-300">
+                        {{-- Icon Wrapper --}}
+                        <div class="flex-shrink-0 mr-5">
+                            <div class="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center text-teal-600 group-hover:bg-teal-600 group-hover:text-white transition-colors duration-300">
+                                {{-- Icon Mata (SVG) --}}
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                            </div>
+                        </div>
+                        {{-- Text Content --}}
+                        <div>
+                            <h3 class="text-xl font-bold text-teal-900 mb-2">Gejala Utama</h3>
+                            <p class="text-gray-600 text-sm leading-relaxed">
+                                Tanda awal meliputi mata merah dan kering, penglihatan menjadi kabur atau ganda, serta kesulitan memfokuskan pandangan setelah menatap layar.
+                            </p>
+                        </div>
+                    </div>
+
+                    {{-- Card 2: Bahaya & Dampak Fisik --}}
+                    <div class="group flex items-start bg-white/60 backdrop-blur-sm p-5 rounded-xl border border-teal-100 shadow-sm hover:shadow-md hover:bg-white transition-all duration-300">
+                        {{-- Icon Wrapper --}}
+                        <div class="flex-shrink-0 mr-5">
+                            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-red-500 group-hover:bg-red-500 group-hover:text-white transition-colors duration-300">
+                                {{-- Icon Bahaya/Fisik (SVG) --}}
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            </div>
+                        </div>
+                        {{-- Text Content --}}
+                        <div>
+                            <h3 class="text-xl font-bold text-teal-900 mb-2">Bahaya & Dampak Fisik</h3>
+                            <p class="text-gray-600 text-sm leading-relaxed">
+                                Jika dibiarkan, dapat memicu sakit kepala kronis (*headache*), serta nyeri pada leher dan bahu akibat postur tubuh yang buruk saat menggunakan perangkat.
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
             </div>
+
         </div>
     </div>
 </section>

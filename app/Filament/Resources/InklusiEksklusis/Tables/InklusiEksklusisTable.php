@@ -2,10 +2,11 @@
 
 namespace App\Filament\Resources\InklusiEksklusis\Tables;
 
+use Filament\Actions\ViewAction;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\IconColumn;
-use Filament\Tables\Actions\ViewAction;
+
 
 class InklusiEksklusisTable
 {
@@ -15,14 +16,13 @@ class InklusiEksklusisTable
             ->columns([
                 // 1. Menampilkan Nama Pasien (Relasi Berjenjang)
                 TextColumn::make('pemeriksaan.user.name')
-                    ->label('Nama Pasien')
+                    ->label('Nama')
                     ->searchable()
                     ->sortable(),
-
                 // 2. Menampilkan Tanggal Pemeriksaan
                 TextColumn::make('pemeriksaan.tanggal')
                     ->label('Tanggal')
-                    ->dateTime('d M Y')
+                    ->dateTime('d M Y, H:i')
                     ->sortable(),
 
                 // 3. Status Inklusi (Kriteria Masuk)
@@ -33,15 +33,12 @@ class InklusiEksklusisTable
                     ->color(fn (bool $state): string => $state ? 'success' : 'danger'),
 
                 // 4. Status Eksklusi (Kriteria Penolak)
-                // Hati-hati: Eksklusi "Ya" (True) justru artinya buruk (Danger)
                 TextColumn::make('ada_eksklusi')
                     ->label('Ada Eksklusi?')
                     ->badge()
                     ->formatStateUsing(fn (bool $state): string => $state ? 'Ya' : 'Tidak')
                     ->color(fn (bool $state): string => $state ? 'danger' : 'success'),
-
-                // 5. Status Akhir (Opsional: Computed Column)
-                // Menghitung logika sederhana: Lolos jika Inklusi YA dan Eksklusi TIDAK
+                // 5. Status Akhir
                 TextColumn::make('status_screening')
                     ->label('Status Screening')
                     ->state(function ($record) {
@@ -52,15 +49,13 @@ class InklusiEksklusisTable
                     ->badge()
                     ->color(fn (string $state): string => $state === 'Lolos' ? 'success' : 'danger'),
             ])
+            ->defaultSort('pemeriksaan.tanggal', 'desc') 
             ->filters([
-                // Filter status lolos/tidak
             ])
             ->actions([
-                // // HANYA VIEW
-                // ViewAction::make(),
+                ViewAction::make(),
             ])
             ->bulkActions([
-                // Kosongkan agar aman
             ]);
     }
 }

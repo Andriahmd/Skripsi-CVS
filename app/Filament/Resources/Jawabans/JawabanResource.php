@@ -2,57 +2,57 @@
 
 namespace App\Filament\Resources\Jawabans;
 
-use App\Filament\Resources\Jawabans\Pages\CreateJawaban;
-use App\Filament\Resources\Jawabans\Pages\EditJawaban;
 use App\Filament\Resources\Jawabans\Pages\ListJawabans;
 use App\Filament\Resources\Jawabans\Pages\ViewJawaban;
-use App\Filament\Resources\Jawabans\Schemas\JawabanForm;
-use App\Filament\Resources\Jawabans\Schemas\JawabanInfolist;
-use App\Filament\Resources\Jawabans\Tables\JawabansTable;
+use App\Filament\Resources\Jawabans\Schemas\JawabanInfolist; // Import file Infolist
+use App\Filament\Resources\Jawabans\Tables\JawabansTable;    // Import file Table
 use App\Models\Jawaban;
 use BackedEnum;
 use Filament\Resources\Resource;
-use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Filament\Schemas\Schema; // Wajib import Schema
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 class JawabanResource extends Resource
 {
     protected static ?string $model = Jawaban::class;
-
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?string $navigationLabel = 'Jawaban';
-    protected static ?string $pluralLabel = 'Jawaban';
 
-    public static function form(Schema $schema): Schema
-    {
-        return JawabanForm::configure($schema);
-    }
-
+    // Bagian ini yang mengatur TAMPILAN POP-UP/DETAIL
     public static function infolist(Schema $schema): Schema
     {
+        // Pastikan ini memanggil class JawabanInfolist yang isinya TextEntry & RepeatableEntry
         return JawabanInfolist::configure($schema);
     }
 
+    // Bagian ini yang mengatur TABEL DEPAN
     public static function table(Table $table): Table
     {
+        // Pastikan ini memanggil class JawabansTable yang isinya TextColumn
         return JawabansTable::configure($table);
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
     }
 
     public static function getPages(): array
     {
         return [
             'index' => ListJawabans::route('/'),
-            // 'create' => CreateJawaban::route(path: '/create'),
             'view' => ViewJawaban::route('/{record}'),
-            'edit' => EditJawaban::route('/{record}/edit'),
         ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        // Query grouping agar tidak duplikat
+        return parent::getEloquentQuery()
+            ->select('jawaban.*')
+            ->whereIn('jawaban.id_jawaban', function ($query) {
+                $query->select(DB::raw('MIN(id_jawaban)'))
+                    ->from('jawaban')
+                    ->groupBy('id_pemeriksaan');
+            })
+            ->with(['pemeriksaan.user'])
+            ->orderByDesc('id_pemeriksaan');
     }
 }

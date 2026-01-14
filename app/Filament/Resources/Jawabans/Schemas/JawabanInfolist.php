@@ -4,45 +4,48 @@ namespace App\Filament\Resources\Jawabans\Schemas;
 
 use Filament\Schemas\Schema;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Components\Grid;
-use Filament\Schemas\Components\Grid as ComponentsGrid;
+use Filament\Infolists\Components\ViewEntry;
+use Filament\Schemas\Components\Section;
 
 class JawabanInfolist
 {
     public static function configure(Schema $schema): Schema
     {
         return $schema
+            ->columns(1) 
             ->components([
-                ComponentsGrid::make(2)
+                // === KARTU 1: DATA PASIEN ===
+                Section::make('Informasi Pemeriksaan')
+                    ->icon('heroicon-m-clipboard-document-list')
+                    // UBAH JADI 3 KOLOM AGAR RAPI (Nama | Email | Tanggal)
+                    ->columns(3) 
                     ->schema([
-                        // Data User (Deep Relation lagi)
+                        // 1. Nama
                         TextEntry::make('pemeriksaan.user.name')
-                            ->label('Nama Pasien')
+                            ->label('Nama')
+                            ->weight('bold')
                             ->icon('heroicon-m-user'),
 
-                        // Link ke Tanggal Pemeriksaan
-                        TextEntry::make('pemeriksaan.tanggal')
-                            ->label('Tanggal Periksa')
-                            ->dateTime('d M Y, H:i'),
+                        // 2. Email (INI TAMBAHANNYA)
+                        TextEntry::make('pemeriksaan.user.email')
+                            ->label('Email Pasien')
+                            ->icon('heroicon-m-envelope')
+                            ->copyable() // Biar bisa dicopy saat diklik
+                            ->color('gray'),
 
-                        // // Data Gejala & Jawaban
-                        // TextEntry::make('gejala.nama_gejala') // Sesuaikan nama kolom DB Gejala
-                        //     ->label('Pertanyaan / Gejala')
-                        //     ->columnSpanFull(), // Memanjang penuh ke samping
+                        // 3. Tanggal
+                        TextEntry::make('pemeriksaan.created_at')
+                            ->label('Waktu Pemeriksaan')
+                            ->dateTime('d F Y, H:i:s')
+                            ->icon('heroicon-m-clock'),
+                    ]),
 
-                        TextEntry::make('jawaban_text')
-                            ->label('Jawaban')
-                            ->badge()
-                            ->color(fn (string $state): string => match ($state) {
-                                'Selalu' => 'danger',
-                                'Cukup Sering' => 'warning',
-                                'Kadang-kadang' => 'info',
-                                default => 'success',
-                            }),
-
-                        TextEntry::make('nilai_cf')
-                            ->label('Bobot CF')
-                            ->weight('bold'),
+                // === KARTU 2: TABEL ===
+                Section::make('Detail Jawaban Gejala')
+                    ->schema([
+                        ViewEntry::make('tabel_gejala')
+                            ->view('filament.infolists.tabel-hasil-diagnosa')
+                            ->columnSpanFull(),
                     ]),
             ]);
     }

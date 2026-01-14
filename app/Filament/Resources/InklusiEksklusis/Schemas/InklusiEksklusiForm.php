@@ -21,11 +21,6 @@ class InklusiEksklusiForm
                     ->placeholder('Tuliskan kondisi inklusi...')
                     ->required(),
 
-                // TextInput::make('memenuhi')
-                //     ->label('Keterangan Inklusi')
-                //     ->placeholder('Contoh: Memenuhi sebagian, penuh, atau tidak')
-                //     ->required(),
-
                 TextInput::make('ada_eksklusi')
                     ->label('Kondisi Eksklusi')
                     ->placeholder('Tuliskan kondisi eksklusi...')

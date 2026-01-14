@@ -3,18 +3,14 @@
 @section('title', 'Register - MataCare')
 
 @section('content')
-    <!-- Container Utama: Background lebih netral dan bersih -->
-    <div class="min-h-screen flex items-center justify-center p-4 font-sans bg-gray-50 text-gray-800">
-
-        <!-- Card Wrapper: Shadow lebih soft, sudut lebih tajam (rounded-2xl) untuk kesan modern -->
+    
+    <div class="min-h-screen flex items-center justify-center p-4 font-sans  text-gray-800">
+- Card Wrapper: Shadow lebih soft, sudut lebih tajam (rounded-2xl) untuk kesan modern -->
         <div
             class="max-w-5xl w-full grid md:grid-cols-5 bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
 
-            <!-- KIRI: BRANDING & PROFESSIONAL LOOK (Lebar 2/5) -->
             <div
                 class="hidden md:flex md:col-span-2 flex-col justify-between p-10 bg-teal-900 relative overflow-hidden text-white">
-
-                <!-- Dekorasi Background: Pola Geometris Halus (Bukan Blob) -->
                 <div class="absolute inset-0 opacity-10">
                     <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
                         <defs>

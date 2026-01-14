@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PemeriksaanController;
+use App\Http\Controllers\RiwayatController;
 
 //Public Routes (Guest Only)
 Route::middleware('guest')->group(function () {
@@ -34,18 +35,25 @@ Route::middleware('auth')->group(function () {
         Route::get('/pertanyaan', [PemeriksaanController::class, 'getPertanyaan'])->name('api.pertanyaan.get');
         Route::post('/screening', [PemeriksaanController::class, 'simpanScreening'])->name('api.screening.save');
         Route::post('/jawaban', [PemeriksaanController::class, 'simpanJawaban'])->name('api.jawaban.save');
-        Route::post('/pemeriksaan/submit-total', [App\Http\Controllers\PemeriksaanController::class, 'submitTotal']);
-        
+        Route::post('/pemeriksaan/submit-total', [PemeriksaanController::class, 'submitTotal']);
+
         // Route Penting untuk Hitung Diagnosis
         Route::post('/diagnosis', [PemeriksaanController::class, 'hitungDiagnosis'])->name('api.diagnosis.calculate');
-        
+
         Route::get('/riwayat', [PemeriksaanController::class, 'getRiwayat'])->name('api.riwayat.get');
     });
 
     // ✅ ROUTE HASIL (Ini yang akan dipanggil setelah selesai hitung)
-    // Pastikan route ini ada di dalam middleware 'auth'
     Route::get('/hasil/{idPemeriksaan}', [PemeriksaanController::class, 'hasilDiagnosis'])
-        ->name('hasil.show'); 
+        ->name('hasil.show');
+
+    //  ROUTE RIWAYAT PEMERIKSAAN (NEW!)
+    Route::prefix('riwayat')->name('riwayat.')->controller(RiwayatController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/{id}', 'show')->name('show');
+        Route::delete('/{id}', 'destroy')->name('destroy');
+    });
+
 });
 
 //Fallback (404)

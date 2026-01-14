@@ -13,13 +13,31 @@ class Saran extends Model
     protected $keyType = 'int';
 
     protected $fillable = [
-        'id_pemeriksaan',
+        'kategori',
+        'persentase_min',
+        'persentase_max',
         'isi_saran',
     ];
 
-    // Relasi
-    public function pemeriksaan()
+    protected $casts = [
+        'persentase_min' => 'decimal:2',
+        'persentase_max' => 'decimal:2',
+    ];
+
+    /**
+     * Scope untuk mencari saran berdasarkan persentase
+     */
+    public function scopeByPersentase($query, $persentase)
     {
-        return $this->belongsTo(Pemeriksaan::class, 'id_pemeriksaan', 'id');
+        return $query->where('persentase_min', '<=', $persentase)
+                     ->where('persentase_max', '>=', $persentase);
+    }
+
+    /**
+     * Scope untuk mencari saran berdasarkan kategori
+     */
+    public function scopeByKategori($query, $kategori)
+    {
+        return $query->where('kategori', $kategori);
     }
 }

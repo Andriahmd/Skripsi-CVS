@@ -2,10 +2,8 @@
 
 namespace App\Filament\Resources\InklusiEksklusis;
 
-use App\Filament\Resources\InklusiEksklusis\Pages\CreateInklusiEksklusi;
-use App\Filament\Resources\InklusiEksklusis\Pages\EditInklusiEksklusi;
 use App\Filament\Resources\InklusiEksklusis\Pages\ListInklusiEksklusis;
-use App\Filament\Resources\InklusiEksklusis\Pages\ViewInklusiEksklusi;
+use App\Filament\Resources\InklusiEksklusis\Pages\ViewInklusiEksklusi; // Pastikan ini ada
 use App\Filament\Resources\InklusiEksklusis\Schemas\InklusiEksklusiForm;
 use App\Filament\Resources\InklusiEksklusis\Schemas\InklusiEksklusiInfolist;
 use App\Filament\Resources\InklusiEksklusis\Tables\InklusiEksklusisTable;
@@ -15,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class InklusiEksklusiResource extends Resource
@@ -22,9 +21,24 @@ class InklusiEksklusiResource extends Resource
     protected static ?string $model = InklusiEksklusi::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
- protected static ?string $navigationLabel = 'Inklusi & Eksklusi';
+    protected static ?string $navigationLabel = 'Inklusi & Eksklusi';
     protected static ?string $pluralLabel = 'Inklusi & Eksklusi';
     protected static ?string $recordTitleAttribute = 'Pemeriksaan';
+    
+    public static function canCreate(): bool
+    {
+        return false;
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return false;
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return false;
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -48,19 +62,20 @@ class InklusiEksklusiResource extends Resource
         ];
     }
 
-    // public static function getRecordTitle(Model $record): string
-    // {
-      
-    //     return $record->pemeriksaan->user->name ?? 'Screening #' . $record->id_inklusi_eksklusi;
-    // }
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->with(['pemeriksaan.user']) 
+            ->latest('id_inklusi_eksklusi'); 
+    }
 
+   
     public static function getPages(): array
     {
         return [
             'index' => ListInklusiEksklusis::route('/'),
-            'create' => CreateInklusiEksklusi::route('/create'),
-            'view' => ViewInklusiEksklusi::route('/{record}'),
-            'edit' => EditInklusiEksklusi::route('/{record}/edit'),
+
+            'view' => ViewInklusiEksklusi::route('/{record}'), 
         ];
     }
 }

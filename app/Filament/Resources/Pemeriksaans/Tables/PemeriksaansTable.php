@@ -7,7 +7,6 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Actions\DeleteAction;
 
-
 class PemeriksaansTable
 {
     public static function configure(Table $table): Table
@@ -20,8 +19,8 @@ class PemeriksaansTable
                     ->rowIndex(),
 
                 // Menampilkan Nama User (Relasi ke tabel users)
-                TextColumn::make('user.name') 
-                    ->label('Nama Pasien')
+                TextColumn::make('user.name')
+                    ->label('Nama')
                     ->searchable()
                     ->sortable(),
 
@@ -35,7 +34,7 @@ class PemeriksaansTable
                 TextColumn::make('hasil_diagnosa')
                     ->label('Hasil Diagnosa')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'Normal' => 'success', // Hijau
                         'Ringan' => 'info',
                         'Sedang' => 'warning',
@@ -51,17 +50,15 @@ class PemeriksaansTable
                     ->suffix('%')
                     ->sortable(),
             ])
+            // ✅ TAMBAHKAN INI: Agar urut dari tanggal terbaru (descending)
+            ->defaultSort('tanggal', 'desc')
+
             ->filters([
-                // Filter bisa ditambahkan nanti jika butuh
             ])
             ->actions([
-                // HANYA VIEW, tidak ada Edit
-                // ViewAction::make(), 
-                // DeleteAction::make(), // Aktifkan ini jika admin boleh menghapus history
+
             ])
             ->bulkActions([
-                // Kosongkan atau biarkan default delete bulk jika perlu
-            ]
-        );
+            ]);
     }
 }

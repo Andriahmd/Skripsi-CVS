@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Pemeriksaan;
 use App\Models\Jawaban;
 use App\Models\Gejala;
+use App\Models\Saran;
 use App\Models\InklusiEksklusi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -54,13 +55,13 @@ class PemeriksaanController extends Controller
 
             if (!empty($jawabanBaru)) {
                 // Filter jawaban valid
-                $validJawaban = array_filter($jawabanBaru, function($item) {
-                    $valid = isset($item['id']) && 
-                           isset($item['answer']) && 
-                           isset($item['nilai']) &&
-                           is_numeric($item['id']) &&
-                           is_numeric($item['nilai']);
-                    
+                $validJawaban = array_filter($jawabanBaru, function ($item) {
+                    $valid = isset($item['id']) &&
+                        isset($item['answer']) &&
+                        isset($item['nilai']) &&
+                        is_numeric($item['id']) &&
+                        is_numeric($item['nilai']);
+
                     if (!$valid) {
                         Log::warning('Invalid jawaban item:', $item);
                     }
@@ -71,12 +72,12 @@ class PemeriksaanController extends Controller
 
                 if (!empty($validJawaban)) {
                     $gejalaIds = array_map(fn($item) => (int) $item['id'], $validJawaban);
-                    
+
                     // Hapus jawaban lama
                     $deleted = Jawaban::where('id_pemeriksaan', $idPemeriksaan)
                         ->whereIn('id_gejala', $gejalaIds)
                         ->delete();
-                    
+
                     Log::info("Deleted old answers: {$deleted}");
 
                     // Ambil master gejala
@@ -88,7 +89,7 @@ class PemeriksaanController extends Controller
 
                     foreach ($validJawaban as $item) {
                         $gejalaId = (int) $item['id'];
-                        
+
                         if (!isset($masterGejala[$gejalaId])) {
                             Log::warning("Gejala {$gejalaId} not found in master");
                             continue;
@@ -118,9 +119,7 @@ class PemeriksaanController extends Controller
                 }
             }
 
-            // ============================================
-            // TAHAP 2: HITUNG DIAGNOSA (CRITICAL FIX!)
-            // ============================================
+
             Log::info('=== CALCULATING CF COMBINE ===');
 
             // Ambil SEMUA jawaban dengan CF > 0
@@ -150,10 +149,14 @@ class PemeriksaanController extends Controller
                     $cfOld = $cfCombine;
                     $cfNew = $cfValues[$i];
                     $cfCombine = $cfOld + ($cfNew * (1 - $cfOld));
-                    
+
                     Log::info(sprintf(
                         "Step %d: %.4f + (%.4f * (1 - %.4f)) = %.4f",
-                        $i, $cfOld, $cfNew, $cfOld, $cfCombine
+                        $i,
+                        $cfOld,
+                        $cfNew,
+                        $cfOld,
+                        $cfCombine
                     ));
                 }
 
@@ -164,15 +167,11 @@ class PemeriksaanController extends Controller
                 Log::warning("No CF values found! Persentase will be 0");
             }
 
-            // ============================================
-            // TAHAP 3: DETERMINE DIAGNOSIS LEVEL
-            // ============================================
+
             $diagnosisData = $this->getDiagnosisLevel($persentase);
             Log::info("Diagnosis determined:", $diagnosisData);
 
-            // ============================================
-            // TAHAP 4: UPDATE PEMERIKSAAN
-            // ============================================
+
             $updateData = [
                 'persentase_cf' => $persentase,
                 'hasil_diagnosa' => $diagnosisData['level']
@@ -210,12 +209,12 @@ class PemeriksaanController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('=== EXCEPTION IN SUBMIT TOTAL ===');
             Log::error('Message: ' . $e->getMessage());
             Log::error('File: ' . $e->getFile() . ' Line: ' . $e->getLine());
             Log::error('Trace: ' . $e->getTraceAsString());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error processing data',
@@ -228,56 +227,39 @@ class PemeriksaanController extends Controller
     // ==========================================
     // FUNGSI PENDUKUNG
     // ==========================================
-    
+
     private function getDiagnosisLevel($persentase)
     {
         Log::info("Getting diagnosis level for: {$persentase}%");
-        
-        if ($persentase >= 80) {
-            return [
-                'level' => 'Sangat Berat',
-                'color' => 'red',
-                'keterangan' => 'Segera ke dokter mata.',
-                'rekomendasi' => 'Istirahat total dari layar, konsultasi medis segera.'
-            ];
-        }
-        
-        if ($persentase >= 60) {
+
+        if ($persentase >= 75) {
             return [
                 'level' => 'Berat',
-                'color' => 'orange',
-                'keterangan' => 'Gejala serius.',
-                'rekomendasi' => 'Batasi layar maksimal, pakai kacamata anti-radiasi.'
+                'color' => 'red',
             ];
         }
-        
-        if ($persentase >= 40) {
+
+        if ($persentase >= 50) {
             return [
                 'level' => 'Sedang',
-                'color' => 'yellow',
-                'keterangan' => 'Perlu perhatian.',
-                'rekomendasi' => 'Terapkan 20-20-20 rule, atur pencahayaan.'
+                'color' => 'orange',
             ];
         }
-        
-        if ($persentase >= 20) {
+
+        if ($persentase >= 25) {
             return [
                 'level' => 'Ringan',
-                'color' => 'blue',
-                'keterangan' => 'Gejala awal.',
-                'rekomendasi' => 'Istirahat berkala, kedipkan mata lebih sering.'
+                'color' => 'yellow',
             ];
         }
-        
+
         return [
-            'level' => 'Normal',
+            'level' => 'Tidak Mengalami',
             'color' => 'green',
-            'keterangan' => 'Mata sehat.',
-            'rekomendasi' => 'Pertahankan kebiasaan baik.'
         ];
     }
 
-    private function getPertanyaanScreening()
+        private function getPertanyaanScreening()
     {
         return [
             'inklusi' => [
@@ -288,8 +270,13 @@ class PemeriksaanController extends Controller
                 5 => 'Apakah jarak pandang Anda ke layar biasanya kurang dari 60–50 cm?',
             ],
             'eksklusi' => [
-                6 => 'Apakah Anda memiliki riwayat kelainan refraksi berat atau sering berganti kacamata?',
-                7 => 'Apakah Anda memiliki kelainan anatomi pada bola mata (misalnya bentuk kornea abnormal)?',
+                1 => 'Apakah Anda memiliki riwayat kelainan refraksi berat atau sering berganti kacamata?',
+                2 => 'Apakah Anda memiliki kelainan anatomi pada bola mata (misalnya bentuk kornea abnormal)?',
+                3 => 'Apakah Anda memiliki riwayat mata merah, infeksi, atau peradangan pada mata baru-baru ini?',
+                4 => 'Apakah Anda memiliki riwayat tekanan bola mata tinggi (glaukoma)?',
+                5 => 'Apakah Anda memiliki riwayat ambliopia (mata malas)?',
+                6 => 'Apakah Anda pernah didiagnosis mengalami sindrom mata kering yang tidak terkait dengan penggunaan layar?',
+                7 => 'Apakah Anda saat ini sedang dalam pengobatan atau pernah rutin menggunakan obat-obatan tertentu yang memengaruhi kondisi mata?',
             ],
         ];
     }
@@ -351,6 +338,7 @@ class PemeriksaanController extends Controller
                 $pertanyaan = $this->getPertanyaanScreening();
                 $data = [];
 
+                // Inklusi (5 pertanyaan)
                 foreach ($pertanyaan['inklusi'] as $id => $text) {
                     $data[] = [
                         'id' => 'inklusi_' . $id,
@@ -359,7 +347,8 @@ class PemeriksaanController extends Controller
                         'options' => ['Ya', 'Tidak']
                     ];
                 }
-                
+
+                // Eksklusi (7 pertanyaan - UPDATED)
                 foreach ($pertanyaan['eksklusi'] as $id => $text) {
                     $data[] = [
                         'id' => 'eksklusi_' . $id,
@@ -368,6 +357,9 @@ class PemeriksaanController extends Controller
                         'options' => ['Ya', 'Tidak']
                     ];
                 }
+
+                Log::info("Screening questions loaded: " . count($data) . " total (5 inklusi + 7 eksklusi)");
+
             } else {
                 $rangeMap = [
                     2 => ['G00', 'G03'],
@@ -377,7 +369,7 @@ class PemeriksaanController extends Controller
                     6 => ['G16', 'G19'],
                     7 => ['G20', 'G23'],
                 ];
-                
+
                 $range = $rangeMap[$kategori] ?? ['G00', 'G03'];
 
                 $gejalaList = Gejala::whereBetween('kode_gejala', $range)
@@ -410,73 +402,202 @@ class PemeriksaanController extends Controller
         }
     }
 
-    public function simpanScreening(Request $request)
-{
-    $validated = $request->validate([
-        'id_pemeriksaan' => 'required|exists:pemeriksaan,id',
-        'jawaban' => 'required|array', // ❌ Ini harusnya object/map, bukan array
-    ]);
+   public function simpanScreening(Request $request)
+    {
+        Log::info('=== SCREENING START (FIXED) ===');
+        Log::info('Request data:', $request->all());
 
-    try {
-        $inclCount = 0;
-        $exclCount = 0;
-
-        // ✅ FIX: Loop as object/map
-        foreach ($validated['jawaban'] as $key => $val) {
-            if (str_starts_with($key, 'inklusi_') && $val === 'Ya')
-                $inclCount++;
-
-            if (str_starts_with($key, 'eksklusi_') && $val === 'Ya')
-                $exclCount++;
-        }
-
-        $lolos = ($inclCount === 5) && ($exclCount === 0);
-
-        InklusiEksklusi::updateOrCreate(
-            ['id_pemeriksaan' => $validated['id_pemeriksaan']],
-            [
-                'memenuhi_inklusi' => ($inclCount === 5),
-                'ada_eksklusi' => ($exclCount > 0)
-            ]
-        );
-
-        return response()->json([
-            'success' => true,
-            'lolos' => $lolos,
-            'message' => $lolos ? 'Lolos screening' : 'Tidak lolos screening'
+        $validated = $request->validate([
+            'id_pemeriksaan' => 'required|exists:pemeriksaan,id',
+            'jawaban' => 'required|array',
         ]);
 
-    } catch (\Exception $e) {
-        Log::error('Simpan Screening Error: ' . $e->getMessage());
-        return response()->json([
-            'success' => false,
-            'message' => $e->getMessage()
-        ], 500);
+        try {
+            $jawaban = $validated['jawaban'];
+
+            // Hitung jawaban inklusi dan eksklusi
+            $inklusiYa = 0;
+            $inklusiTidak = 0;
+            $eksklusiYa = 0;
+            $eksklusiTidak = 0;
+
+            // ✅ Array nilai yang dianggap "YA" (Case Insensitive)
+            $validYes = ['ya', 'yes', '1', 'true'];
+
+            foreach ($jawaban as $key => $val) {
+                // Konversi jawaban ke lowercase string biar aman
+                $cleanVal = strtolower((string)$val); 
+                $isYes = in_array($cleanVal, $validYes);
+
+                if (str_starts_with($key, 'inklusi_')) {
+                    if ($isYes) {
+                        $inklusiYa++;
+                    } else {
+                        $inklusiTidak++;
+                    }
+                }
+
+                if (str_starts_with($key, 'eksklusi_')) {
+                    if ($isYes) {
+                        $eksklusiYa++;
+                    } else {
+                        $eksklusiTidak++;
+                    }
+                }
+            }
+
+            $totalInklusi = $inklusiYa + $inklusiTidak;
+            $totalEksklusi = $eksklusiYa + $eksklusiTidak;
+
+            Log::info("Inklusi: Ya={$inklusiYa}, Tidak={$inklusiTidak}, Total={$totalInklusi}/5");
+            Log::info("Eksklusi: Ya={$eksklusiYa}, Tidak={$eksklusiTidak}, Total={$totalEksklusi}/7");
+
+            // Cek kelengkapan
+            // Pastikan jumlah pertanyaan sesuai dengan frontend (5 inklusi + 7 eksklusi = 12 total)
+            $isComplete = ($totalInklusi === 5 && $totalEksklusi === 7);
+
+            Log::info("Is Complete: " . ($isComplete ? 'YES' : 'NO'));
+
+            // Simpan status sementara ke DB
+            InklusiEksklusi::updateOrCreate(
+                ['id_pemeriksaan' => $validated['id_pemeriksaan']],
+                [
+                    'memenuhi_inklusi' => ($inklusiYa === 5),
+                    'ada_eksklusi' => ($eksklusiYa > 0)
+                ]
+            );
+
+            // Validasi kelolosan HANYA jika semua pertanyaan sudah dijawab
+            if ($isComplete) {
+                $memenuhiInklusi = ($inklusiYa === 5); // Harus 5 "Ya"
+                $tidakAdaEksklusi = ($eksklusiYa === 0); // Harus 0 "Ya" (semua "Tidak")
+                
+                $lolos = $memenuhiInklusi && $tidakAdaEksklusi;
+
+                Log::info("RESULT -> Memenuhi Inklusi: " . ($memenuhiInklusi ? 'YA' : 'TIDAK'));
+                Log::info("RESULT -> Tidak Ada Eksklusi: " . ($tidakAdaEksklusi ? 'YA' : 'TIDAK'));
+                Log::info("FINAL RESULT: " . ($lolos ? 'LOLOS' : 'GAGAL'));
+
+                if (!$lolos) {
+                    // Jika GAGAL, hapus data pemeriksaan agar user harus mengulang
+                    DB::beginTransaction();
+                    try {
+                        Pemeriksaan::where('id', $validated['id_pemeriksaan'])->delete();
+                        DB::commit();
+                        Log::warning("⚠️ Pemeriksaan deleted - Gagal Screening");
+
+                        // Pesan Error Detail
+                        $message = "Maaf, Anda tidak memenuhi syarat screening.\n\n";
+                        
+                        if (!$memenuhiInklusi) {
+                            $message .= "- Kriteria Inklusi Belum Terpenuhi: Anda menjawab 'Tidak' pada " . (5 - $inklusiYa) . " pertanyaan wajib.\n";
+                        }
+                        
+                        if (!$tidakAdaEksklusi) {
+                            $message .= "- Kriteria Eksklusi Terdeteksi: Anda menjawab 'Ya' pada " . $eksklusiYa . " kondisi yang dilarang/eksklusi.\n";
+                        }
+
+                        $message .= "\nSilakan konsultasi dengan dokter.";
+
+                        return response()->json([
+                            'success' => false,
+                            'lolos' => false,
+                            'complete' => true,
+                            'message' => $message,
+                            'detail' => [
+                                'inklusi_ya' => $inklusiYa,
+                                'eksklusi_ya' => $eksklusiYa
+                            ]
+                        ]);
+
+                    } catch (\Exception $e) {
+                        DB::rollBack();
+                        Log::error("Error deleting pemeriksaan: " . $e->getMessage());
+                    }
+                }
+
+                // Jika LOLOS
+                return response()->json([
+                    'success' => true,
+                    'lolos' => true,
+                    'complete' => true,
+                    'message' => 'Selamat! Anda lolos screening.',
+                ]);
+            }
+
+            // Jika belum lengkap (masih proses menjawab)
+            return response()->json([
+                'success' => true,
+                'lolos' => null,
+                'complete' => false,
+                'message' => 'Jawaban tersimpan sementara',
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Simpan Screening Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan server: ' . $e->getMessage()
+            ], 500);
+        }
     }
-}
+
 
     public function hasilDiagnosis($idPemeriksaan)
     {
         try {
+            Log::info("Displaying hasil for pemeriksaan ID: {$idPemeriksaan}");
+
+            // Ambil data pemeriksaan dengan relasi user
             $pemeriksaan = Pemeriksaan::with('user')->findOrFail($idPemeriksaan);
 
+            // Cek authorization
             if ($pemeriksaan->id_user !== Auth::id()) {
-                abort(403);
+                Log::warning("Unauthorized access attempt by user " . Auth::id());
+                abort(403, 'Anda tidak memiliki akses ke hasil pemeriksaan ini.');
             }
 
+            Log::info("Pemeriksaan found - Persentase: {$pemeriksaan->persentase_cf}%, Diagnosa: {$pemeriksaan->hasil_diagnosa}");
+
+            // Get diagnosis level (warna badge)
             $diagnosis = $this->getDiagnosisLevel($pemeriksaan->persentase_cf);
 
+            Log::info("Diagnosis level determined: " . $diagnosis['level']);
+
+            // ✅ AMBIL SARAN DARI DATABASE BERDASARKAN PERSENTASE
+            $saran = Saran::where('persentase_min', '<=', $pemeriksaan->persentase_cf)
+                ->where('persentase_max', '>=', $pemeriksaan->persentase_cf)
+                ->first();
+
+            if ($saran) {
+                Log::info("Saran found: {$saran->kategori} (ID: {$saran->id_saran})");
+            } else {
+                Log::warning("⚠️ No saran found for persentase {$pemeriksaan->persentase_cf}%");
+            }
+
+            // Ambil jawaban gejala dengan CF > 0
             $jawabanGejala = Jawaban::with('gejala')
                 ->where('id_pemeriksaan', $idPemeriksaan)
                 ->where('nilai_cf', '>', 0)
                 ->orderByDesc('nilai_cf')
                 ->get();
 
-            return view('hasilpemeriksaan', compact('pemeriksaan', 'diagnosis', 'jawabanGejala'));
+            Log::info("Jawaban gejala count: " . $jawabanGejala->count());
+
+            // ✅ KIRIM VARIABEL $saran KE VIEW
+            return view('hasilpemeriksaan', compact('pemeriksaan', 'diagnosis', 'jawabanGejala', 'saran'));
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error("Pemeriksaan not found: {$idPemeriksaan}");
+            return redirect()->route('pertanyaan')->with('error', 'Data pemeriksaan tidak ditemukan.');
 
         } catch (\Exception $e) {
             Log::error('Hasil Diagnosis Error: ' . $e->getMessage());
-            return redirect()->route('pertanyaan')->with('error', 'Data tidak ditemukan');
+            Log::error('File: ' . $e->getFile() . ' Line: ' . $e->getLine());
+            Log::error($e->getTraceAsString());
+
+            return redirect()->route('pertanyaan')->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
+
 }

@@ -5,17 +5,39 @@
             <!-- LOGO -->
             <div class="flex-shrink-0 flex items-center">
                 <a href="{{ route('home') }}" class="flex items-center gap-2">
-                    <!-- Opsional: Tambahkan Logo Icon jika ada -->
                     <span class="text-2xl font-bold text-teal-600 tracking-tight">MataCare</span>
                 </a>
             </div>
 
             <!-- DESKTOP MENU (Hidden on Mobile) -->
             <nav class="hidden md:flex space-x-8 text-gray-700">
-                <a href="{{ route('home') }}" class="hover:text-teal-600 font-medium transition duration-150 ease-in-out {{ request()->routeIs('home') ? 'text-teal-600' : '' }}">Home</a>
-                <a href="{{ route('about') }}" class="hover:text-teal-600 font-medium transition duration-150 ease-in-out {{ request()->routeIs('about') ? 'text-teal-600' : '' }}">About</a>
-                <a href="{{ route('pertanyaan') }}" class="hover:text-teal-600 font-medium transition duration-150 ease-in-out {{ request()->routeIs('pertanyaan') ? 'text-teal-600' : '' }}">Diagnosis</a>
-                <a href="{{ route('pages') }}" class="hover:text-teal-600 font-medium transition duration-150 ease-in-out {{ request()->routeIs('pages') ? 'text-teal-600' : '' }}">Saran</a>
+                <a href="{{ route('home') }}" 
+                   class="hover:text-teal-600 font-medium transition duration-150 ease-in-out {{ request()->routeIs('home') ? 'text-teal-600' : '' }}">
+                   Home
+                </a>
+                
+                <a href="{{ route('about') }}" 
+                   class="hover:text-teal-600 font-medium transition duration-150 ease-in-out {{ request()->routeIs('about') ? 'text-teal-600' : '' }}">
+                   About
+                </a>
+                
+                <a href="{{ route('pertanyaan') }}" 
+                   class="hover:text-teal-600 font-medium transition duration-150 ease-in-out {{ request()->routeIs('pertanyaan') ? 'text-teal-600' : '' }}">
+                   Diagnosis
+                </a>
+                
+                @auth
+                    <!-- Menu Riwayat hanya tampil jika user login -->
+                    <a href="{{ route('riwayat.index') }}" 
+                       class="hover:text-teal-600 font-medium transition duration-150 ease-in-out {{ request()->routeIs('riwayat.*') ? 'text-teal-600' : '' }}">
+                       Riwayat
+                    </a>
+                @endauth
+                
+                <a href="{{ route('pages') }}" 
+                   class="hover:text-teal-600 font-medium transition duration-150 ease-in-out {{ request()->routeIs('pages') ? 'text-teal-600' : '' }}">
+                   Saran
+                </a>
             </nav>
 
             <!-- DESKTOP ACTION BUTTONS -->
@@ -57,10 +79,33 @@
     <!-- MOBILE MENU (Hidden by default) -->
     <div class="hidden md:hidden bg-white border-t border-gray-100 shadow-lg absolute w-full left-0" id="mobile-menu">
         <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            <a href="{{ route('home') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-teal-600 hover:bg-teal-50 transition {{ request()->routeIs('home') ? 'bg-teal-50 text-teal-600' : '' }}">Home</a>
-            <a href="{{ route('about') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-teal-600 hover:bg-teal-50 transition {{ request()->routeIs('about') ? 'bg-teal-50 text-teal-600' : '' }}">About</a>
-            <a href="{{ route('pertanyaan') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-teal-600 hover:bg-teal-50 transition {{ request()->routeIs('pertanyaan') ? 'bg-teal-50 text-teal-600' : '' }}">Diagnosis</a>
-            <a href="{{ route('pages') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-teal-600 hover:bg-teal-50 transition {{ request()->routeIs('pages') ? 'bg-teal-50 text-teal-600' : '' }}">Saran</a>
+            <a href="{{ route('home') }}" 
+               class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-teal-600 hover:bg-teal-50 transition {{ request()->routeIs('home') ? 'bg-teal-50 text-teal-600' : '' }}">
+               Home
+            </a>
+            
+            <a href="{{ route('about') }}" 
+               class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-teal-600 hover:bg-teal-50 transition {{ request()->routeIs('about') ? 'bg-teal-50 text-teal-600' : '' }}">
+               About
+            </a>
+            
+            <a href="{{ route('pertanyaan') }}" 
+               class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-teal-600 hover:bg-teal-50 transition {{ request()->routeIs('pertanyaan') ? 'bg-teal-50 text-teal-600' : '' }}">
+               Diagnosis
+            </a>
+            
+            @auth
+                <!-- Menu Riwayat Mobile hanya tampil jika user login -->
+                <a href="{{ route('riwayat.index') }}" 
+                   class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-teal-600 hover:bg-teal-50 transition {{ request()->routeIs('riwayat.*') ? 'bg-teal-50 text-teal-600' : '' }}">
+                   Riwayat Pemeriksaan
+                </a>
+            @endauth
+            
+            <a href="{{ route('pages') }}" 
+               class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-teal-600 hover:bg-teal-50 transition {{ request()->routeIs('pages') ? 'bg-teal-50 text-teal-600' : '' }}">
+               Saran
+            </a>
         </div>
 
         <!-- Mobile Action Buttons -->
@@ -105,22 +150,20 @@
         const iconMenu = document.getElementById('icon-menu');
         const iconClose = document.getElementById('icon-close');
 
-        btn.addEventListener('click', () => {
-            // Toggle visibility menu
-            menu.classList.toggle('hidden');
-            
-            // Toggle icon (Hamburger <-> Silang)
-            iconMenu.classList.toggle('hidden');
-            iconClose.classList.toggle('hidden');
-        });
+        if (btn && menu && iconMenu && iconClose) {
+            btn.addEventListener('click', () => {
+                menu.classList.toggle('hidden');
+                iconMenu.classList.toggle('hidden');
+                iconClose.classList.toggle('hidden');
+            });
 
-        // Opsional: Tutup menu jika klik di luar
-        document.addEventListener('click', (e) => {
-            if (!btn.contains(e.target) && !menu.contains(e.target)) {
-                menu.classList.add('hidden');
-                iconMenu.classList.remove('hidden');
-                iconClose.classList.add('hidden');
-            }
-        });
+            document.addEventListener('click', (e) => {
+                if (!btn.contains(e.target) && !menu.contains(e.target)) {
+                    menu.classList.add('hidden');
+                    iconMenu.classList.remove('hidden');
+                    iconClose.classList.add('hidden');
+                }
+            });
+        }
     });
 </script>

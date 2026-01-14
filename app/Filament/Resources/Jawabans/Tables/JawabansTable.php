@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\Jawabans\Tables;
 
+use Filament\Actions\ViewAction;
 use Filament\Tables\Table;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Actions\ViewAction;
-use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Columns\TextColumn; // Pastikan pakai TextColumn
+
 
 class JawabansTable
 {
@@ -13,51 +13,38 @@ class JawabansTable
     {
         return $table
             ->columns([
-                
+                // Kolom 1: Nama Pasien
+                // Pastikan pakai TextColumn, JANGAN TextEntry
                 TextColumn::make('pemeriksaan.user.name')
-                    ->label('Nama Pasien')
-                    ->searchable() // Bisa dicari berdasarkan nama
-                    ->sortable(),
+                    ->label('Nama')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('bold'),
 
-                // TextColumn::make('gejala.nama_gejala') 
-                //     ->label('Gejala')
-                //     ->wrap() // Agar teks panjang turun ke bawah (tidak melebar)
-                //     ->limit(50),
+                TextColumn::make('pemeriksaan.user.email')
+                    ->label('Email Pasien')
+                    ->searchable()
+                    ->sortable()
+                    ->color('gray'),
 
-                // 3. Jawaban User dengan Warna (Badge)
-                TextColumn::make('jawaban_text')
-                    ->label('Jawaban')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'Selalu' => 'danger',       // Merah
-                        'Cukup Sering' => 'warning', // Kuning/Oranye
-                        'Kadang-kadang' => 'info',   // Biru
-                        'Tidak Pernah' => 'success', // Hijau
-                        default => 'gray',
-                    }),
-
-                // 4. Nilai CF
-                TextColumn::make('nilai_cf')
-                    ->label('Nilai CF')
-                    ->numeric(1) // 1 angka belakang koma
+                // Kolom 2: Tanggal Pemeriksaan
+                TextColumn::make('pemeriksaan.created_at')
+                    ->label('Tgl Pemeriksaan')
+                    ->date('d/m/Y')
                     ->sortable(),
             ])
             ->filters([
-                // Opsional: Filter berdasarkan Jawaban Text
-                SelectFilter::make('jawaban_text')
-                    ->options([
-                        'Selalu' => 'Selalu',
-                        'Cukup Sering' => 'Cukup Sering',
-                        'Kadang-kadang' => 'Kadang-kadang',
-                        'Tidak Pernah' => 'Tidak Pernah',
-                    ]),
+                // Filter kosongkan dulu
             ])
             ->actions([
-                
-                
+                // Tombol "Mata" untuk melihat detail
+                // Saat diklik, dia akan memanggil 'infolist' dari Resource
+                ViewAction::make()
+                    ->label('Lihat Detail')
+                    ->modalHeading('Hasil Diagnosa'), 
             ])
             ->bulkActions([
-                // Kosongkan agar admin tidak bisa hapus massal
+                // Kosongkan agar aman
             ]);
     }
 }

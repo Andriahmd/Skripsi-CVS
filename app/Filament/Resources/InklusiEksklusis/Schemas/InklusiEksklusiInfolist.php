@@ -18,7 +18,7 @@ class InklusiEksklusiInfolist
                     ->schema([
                         // Data Pasien
                         TextEntry::make('pemeriksaan.user.name')
-                            ->label('Nama Pasien')
+                            ->label('Nama')
                             ->icon('heroicon-m-user'),
 
                         TextEntry::make('pemeriksaan.tanggal')
@@ -28,7 +28,7 @@ class InklusiEksklusiInfolist
                         // Status Inklusi (Menggunakan Icon Check/X)
                         IconEntry::make('memenuhi_inklusi')
                             ->label('Memenuhi Kriteria Inklusi?')
-                            ->boolean() // Otomatis jadi Centang/Silang
+                            ->boolean() 
                             ->trueColor('success')
                             ->falseColor('danger'),
 
@@ -36,8 +36,8 @@ class InklusiEksklusiInfolist
                         IconEntry::make('ada_eksklusi')
                             ->label('Ditemukan Kriteria Eksklusi?')
                             ->boolean()
-                            ->trueColor('danger') // Kalau True (Ada Eksklusi) malah Merah
-                            ->falseColor('success'), // Kalau False (Tidak ada Eksklusi) malah Hijau
+                            ->trueColor('danger') 
+                            ->falseColor('success'), 
                     ]),
             ]);
     }
