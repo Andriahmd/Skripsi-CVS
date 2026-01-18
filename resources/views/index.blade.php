@@ -82,7 +82,6 @@
                     {{-- Card 1: Gejala Umum --}}
                     <div
                         class="group bg-white rounded-3xl p-8 border border-gray-100 shadow-xl shadow-gray-200/50 hover:shadow-2xl hover:shadow-teal-500/10 hover:-translate-y-2 transition-all duration-300 relative overflow-hidden">
-                        {{-- Hiasan Background Card --}}
                         <div
                             class="absolute top-0 right-0 w-32 h-32 bg-teal-50 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110">
                         </div>
@@ -105,7 +104,6 @@
                                 kaki</strong> selama minimal <strong>20 detik</strong>.
                         </p>
                     </div>
-
                     {{-- Card 3: Ergonomi --}}
                     <div
                         class="group bg-white rounded-3xl p-8 border border-gray-100 shadow-xl shadow-gray-200/50 hover:shadow-2xl hover:shadow-teal-500/10 hover:-translate-y-2 transition-all duration-300 relative overflow-hidden">
@@ -125,7 +123,6 @@
         </div>
 
         <div class="py-24 bg-white relative overflow-hidden">
-
             {{-- Dekorasi Background (SAMA PERSIS DENGAN HEADER) --}}
             <div
                 class="absolute top-0 left-0 -ml-20 -mt-20 w-96 h-96 bg-teal-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob">
@@ -134,7 +131,6 @@
                 class="absolute bottom-0 right-0 -mr-20 -mb-20 w-96 h-96 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000">
             </div>
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-
                 {{-- Judul Section --}}
                 <div class="text-center mb-16 max-w-3xl mx-auto">
                     <span

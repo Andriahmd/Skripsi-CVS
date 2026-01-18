@@ -4,73 +4,60 @@
 
 @section('content')
 
-    <div class="h-screen w-full flex items-center justify-center font-sans text-gray-800 overflow-hidden">
+    <div class="h-screen w-full flex items-center justify-center font-sans text-gray-800 overflow-hidden bg-gray-50">
 
-        <!-- 🚨 MODAL ALERT OVERLAY -->
         @if ($errors->any())
-            <div id="errorModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
-                <div class="bg-white rounded-lg shadow-2xl max-w-md w-full transform transition-all">
-                    <!-- Header Merah -->
-                    <div class="bg-red-500 rounded-t-lg p-6 text-center">
-                        <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                        </div>
-                        <h3 class="text-2xl font-bold text-white">Login Gagal!</h3>
+            <div id="errorModal" class="fixed inset-0 z-50 flex items-center justify-center px-4 pointer-events-none">
+                <div
+                    class="bg-white rounded-2xl shadow-2xl max-w-sm w-full transform transition-all pointer-events-auto p-6 text-center animate-fade-in-up border border-gray-100">
+                    <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-6">
+                        <svg class="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
                     </div>
-
-                    <!-- Body -->
-                    <div class="p-6 text-center">
-                        <p class="text-gray-600 mb-4">
-                            @foreach ($errors->all() as $error)
-                                {{ $error }}
-                            @endforeach
-                        </p>
-                        <button onclick="document.getElementById('errorModal').remove()"
-                            class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg transition-colors">
-                            TUTUP
-                        </button>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Pendaftaran Gagal</h3>
+                    <div class="text-sm text-gray-500 mb-6 leading-relaxed">
+                        @foreach ($errors->all() as $error)
+                            <p>{{ $error }}</p>
+                        @endforeach
                     </div>
+                    <button onclick="closeModal('errorModal')"
+                        class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-3 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm transition-colors">
+                        Tutup
+                    </button>
                 </div>
             </div>
         @endif
 
         @if (session('success'))
-            <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
-                <div class="bg-white rounded-lg shadow-2xl max-w-md w-full transform transition-all">
-                    <!-- Header Hijau -->
-                    <div class="bg-green-500 rounded-t-lg p-6 text-center">
-                        <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
-                            <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                            </svg>
-                        </div>
-                        <h3 class="text-2xl font-bold text-white">Berhasil!</h3>
+            <div id="successModal" class="fixed inset-0 z-50 flex items-center justify-center px-4 pointer-events-none">
+                <div
+                    class="bg-white rounded-2xl shadow-2xl max-w-sm w-full transform transition-all pointer-events-auto p-6 text-center animate-fade-in-up border border-gray-100">
+                    <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
+                        <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
                     </div>
 
-                    <!-- Body -->
-                    <div class="p-6 text-center">
-                        <p class="text-gray-600 mb-4">{{ session('success') }}</p>
-                        <button onclick="document.getElementById('successModal').remove()"
-                            class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition-colors">
-                            TUTUP
-                        </button>
-                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Berhasil!</h3>
+
+                    <p class="text-sm text-gray-500 mb-6 leading-relaxed">
+                        {{ session('success') }}
+                    </p>
+                    <button onclick="closeModal('successModal')"
+                        class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-3 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:text-sm transition-colors">
+                        Lanjutkan
+                    </button>
                 </div>
             </div>
         @endif
 
         <div
-            class="max-w-5xl w-full max-h-[95vh] grid md:grid-cols-5 bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100 m-4">
+            class="max-w-5xl w-full max-h-[95vh] grid md:grid-cols-5 bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100 m-4 relative">
 
-
-            <!-- Padding dikembalikan ke p-10 agar lega -->
             <div
                 class="hidden md:flex md:col-span-2 flex-col justify-between p-10 bg-gradient-to-br from-teal-800 via-teal-700 to-teal-900 relative overflow-hidden text-white">
-
-                <!-- Pattern Geometris -->
                 <div class="absolute inset-0 opacity-20">
                     <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
                         <defs>
@@ -82,8 +69,6 @@
                         <rect width="100%" height="100%" fill="url(#grid-pattern)" />
                     </svg>
                 </div>
-
-                <!-- Logo Area -->
                 <div class="relative z-10">
                     <div
                         class="w-12 h-12 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/20 mb-6 shadow-lg">
@@ -99,8 +84,6 @@
                     <p class="text-teal-100 text-sm leading-relaxed font-light">Masuk ke dashboard pasien untuk melakukan
                         pemeriksaan dan melihat hasil medis Anda.</p>
                 </div>
-
-                <!-- Footer Kiri -->
                 <div class="relative z-10 mt-auto">
                     <div class="flex items-center gap-3 mb-4">
                         <div class="text-xs text-teal-100">
@@ -112,19 +95,14 @@
                 </div>
             </div>
 
-            <!-- KANAN: FORM LOGIN -->
             <div class="md:col-span-3 p-8 md:p-12 w-full bg-white flex flex-col justify-center overflow-y-auto">
-
                 <div class="mb-8">
                     <h1 class="text-2xl font-bold text-gray-900 mb-1">Masuk ke Akun</h1>
                     <p class="text-sm text-gray-500">Silakan masukkan email dan password Anda.</p>
                 </div>
 
-                <!-- Spacing dikembalikan ke space-y-6 agar lega -->
                 <form method="POST" action="{{ route('login.post') }}" class="space-y-6">
                     @csrf
-
-                    <!-- Email Input -->
                     <div class="space-y-1.5">
                         <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide">Alamat
                             Email</label>
@@ -143,16 +121,14 @@
                         </div>
                     </div>
 
-                    <!-- Password Input -->
                     <div class="space-y-1.5">
                         <div class="flex justify-between items-center">
                             <label
                                 class="block text-xs font-semibold text-gray-600 uppercase tracking-wide">Password</label>
                             @if (Route::has('password.request'))
                                 <a href="{{ route('password.request') }}"
-                                    class="text-xs text-teal-600 hover:text-teal-800 font-medium transition-colors">
-                                    Lupa Password?
-                                </a>
+                                    class="text-xs text-teal-600 hover:text-teal-800 font-medium transition-colors">Lupa
+                                    Password?</a>
                             @endif
                         </div>
                         <div class="relative group">
@@ -160,7 +136,6 @@
                                 class="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-teal-600 focus:border-teal-600 outline-none transition-all placeholder:text-gray-400 text-sm group-hover:border-teal-400 @error('password') border-red-500 @enderror">
                             <button type="button" onclick="togglePasswordVisibility()"
                                 class="absolute inset-y-0 right-0 pr-3 flex items-center transition-colors group-focus-within:text-teal-600 text-gray-400 hover:text-teal-600 cursor-pointer">
-                                <!-- Eye Icon (Show) -->
                                 <svg id="eyeIcon" class="h-5 w-5 hidden" xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 20 20" fill="currentColor">
                                     <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
@@ -168,7 +143,6 @@
                                         d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
                                         clip-rule="evenodd" />
                                 </svg>
-                                <!-- Lock Icon (Hide) -->
                                 <svg id="lockIcon" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
                                     fill="currentColor">
                                     <path fill-rule="evenodd"
@@ -179,35 +153,14 @@
                         </div>
                     </div>
 
-                    <script>
-                        function togglePasswordVisibility() {
-                            const passwordInput = document.getElementById('password');
-                            const eyeIcon = document.getElementById('eyeIcon');
-                            const lockIcon = document.getElementById('lockIcon');
-
-                            if (passwordInput.type === 'password') {
-                                passwordInput.type = 'text';
-                                eyeIcon.classList.remove('hidden');
-                                lockIcon.classList.add('hidden');
-                            } else {
-                                passwordInput.type = 'password';
-                                eyeIcon.classList.add('hidden');
-                                lockIcon.classList.remove('hidden');
-                            }
-                        }
-                    </script>
-
-                    <!-- Remember Me -->
                     <div class="flex items-center">
                         <input id="remember_me" type="checkbox" name="remember"
                             class="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-teal-300 text-teal-700 cursor-pointer">
                         <label for="remember_me"
-                            class="ml-2 text-sm text-gray-600 cursor-pointer select-none hover:text-gray-800">
-                            Ingat saya di perangkat ini
-                        </label>
+                            class="ml-2 text-sm text-gray-600 cursor-pointer select-none hover:text-gray-800">Ingat saya di
+                            perangkat ini</label>
                     </div>
 
-                    <!-- Tombol Login -->
                     <button type="submit"
                         class="w-full bg-gradient-to-r from-teal-800 to-teal-700 text-white font-bold py-3.5 rounded-lg hover:from-teal-900 hover:to-teal-800 transition-all shadow-md hover:shadow-lg text-sm flex justify-center items-center gap-2 group transform active:scale-[0.98]">
                         Masuk Sekarang
@@ -219,7 +172,6 @@
                         </svg>
                     </button>
 
-                    <!-- Divider & Register Link -->
                     <div class="relative my-6">
                         <div class="absolute inset-0 flex items-center">
                             <div class="w-full border-t border-gray-200"></div>
@@ -240,5 +192,43 @@
             </div>
         </div>
     </div>
+
+     <style>
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translate3d(0, 20px, 0);
+            }
+
+            to {
+                opacity: 1;
+                transform: translate3d(0, 0, 0);
+            }
+        }
+
+        .animate-fade-in-up {
+            animation: fadeInUp 0.4s ease-out forwards;
+        }
+    </style>
+    <script>
+        function closeModal(modalId) {
+            const modalWrapper = document.getElementById(modalId);
+            if (modalWrapper) {
+                const modalContent = modalWrapper.querySelector('div');
+                modalContent.style.opacity = '0';
+                modalContent.style.transform = 'scale(0.95)';
+                modalContent.style.transition = 'all 0.2s ease-in';
+                setTimeout(() => { modalWrapper.remove(); }, 200);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const successModal = document.getElementById('successModal');
+            if (successModal) setTimeout(() => { closeModal('successModal'); }, 5000);
+
+            const errorModal = document.getElementById('errorModal');
+            if (errorModal) setTimeout(() => { closeModal('errorModal'); }, 5000);
+        });
+    </script>
 
 @endsection
