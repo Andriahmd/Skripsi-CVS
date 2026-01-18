@@ -6,10 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CVs-Diagnosis</title>
     <div class="hidden from-emerald-500 to-emerald-700"></div>
-    @vite('resources/css/app.css')
+    {{-- @vite('resources/css/app.css') --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
         integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLMDJ8K2R/cOpm2E2H38+6fH4S7K5wWkF/tqjYlW/S6rD7o/N8O9r8kO8S7F8w=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <link rel="stylesheet" href="{{ asset('build/assets/app-tGmxrBMP.css') }}">
+
+    <script type="module" src="{{ asset('build/assets/app-C0G0cght.js') }}"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <head>
