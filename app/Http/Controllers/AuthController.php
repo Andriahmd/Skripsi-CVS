@@ -47,7 +47,7 @@ class AuthController extends Controller
     // 🔹 Tampilkan form register
     public function showRegisterForm()
     {
-        return view('register');
+        return view('Register');
     }
 
     // 🔹 Proses register
